@@ -1,4 +1,4 @@
-import { PrismaClient, Urgency, RequestStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -242,8 +242,8 @@ async function main() {
       description:
         "Vannaxona ostidagi quvurdan suv oqib chiqmoqda. Tezda ta'mirlash kerak. Biroz jiddiy muammo — pol namlanyapti.",
       categorySlug: "plumbing",
-      urgency: Urgency.HIGH,
-      status: RequestStatus.PENDING,
+      urgency: "HIGH",
+      status: "PENDING",
       address: "Yunusobod tumani, 19-kvartal",
       city: "Toshkent",
       latitude: 41.3373,
@@ -256,8 +256,8 @@ async function main() {
       description:
         "18 kvadrat metrlik xonaga yangi konditsioner o'rnatish kerak. Qurilma sotib olingan, faqat o'rnatuvchi kerak.",
       categorySlug: "ac-repair",
-      urgency: Urgency.MEDIUM,
-      status: RequestStatus.MATCHED,
+      urgency: "MEDIUM",
+      status: "MATCHED",
       address: "Chilonzor tumani, 14-kvartal",
       city: "Toshkent",
       latitude: 41.2995,
@@ -270,8 +270,8 @@ async function main() {
       description:
         "Oshxona shkaflarining eshiklari singan va petlalari buzilgan. 3 ta shkaf eshigini ta'mirlash yoki almashtirish kerak.",
       categorySlug: "carpentry",
-      urgency: Urgency.LOW,
-      status: RequestStatus.COMPLETED,
+      urgency: "LOW",
+      status: "COMPLETED",
       address: "Mirzo Ulug'bek tumani, Qorasaroy ko'chasi",
       city: "Toshkent",
       latitude: 41.3221,
@@ -294,7 +294,7 @@ async function main() {
     });
 
     let assignedMasterId: string | undefined;
-    if (data.status !== RequestStatus.PENDING) {
+    if (data.status !== "PENDING") {
       const masterForCategory = await prisma.masterCategory.findFirst({
         where: { categoryId: category.id },
         select: { masterId: true },
@@ -306,18 +306,30 @@ async function main() {
     if (existing) {
       request = await prisma.serviceRequest.update({
         where: { id: existing.id },
-        data: { ...data, categoryId: category.id, masterId: assignedMasterId ?? null },
+        data: {
+          ...data,
+          urgency: data.urgency as any,
+          status: data.status as any,
+          categoryId: category.id,
+          masterId: assignedMasterId ?? null,
+        },
       });
     } else {
       request = await prisma.serviceRequest.create({
-        data: { ...data, categoryId: category.id, masterId: assignedMasterId },
+        data: {
+          ...data,
+          urgency: data.urgency as any,
+          status: data.status as any,
+          categoryId: category.id,
+          masterId: assignedMasterId,
+        },
       });
     }
 
     console.log(`  ✓ Request: "${data.title}" [${data.status}]`);
 
     // Add a review for the completed request
-    if (data.status === RequestStatus.COMPLETED) {
+    if (data.status === "COMPLETED") {
       const sardor = masters["sardor.yusupov@example.uz"];
       if (sardor) {
         const existingReview = await prisma.review.findFirst({

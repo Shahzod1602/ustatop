@@ -21,6 +21,11 @@ interface Category {
   slug: string
 }
 
+interface Profile {
+  fullName: string
+  phone?: string
+}
+
 const URGENCY_OPTIONS = [
   { value: "LOW", label: "Oddiy (Low)" },
   { value: "MEDIUM", label: "O'rta (Medium)" },
@@ -36,6 +41,7 @@ function RequestPageInner() {
   const { toast } = useToast()
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(false)
 
   const categorySlug = searchParams.get("category")
@@ -51,7 +57,7 @@ function RequestPageInner() {
       city: "Toshkent",
       urgency: "URGENT",
       customerName: "Nargiza",
-      customerPhone: "+998901112233",
+      customerPhone: "",
       title: "Rakovina suv oqmoqda",
       description: "Krondan suv tomyapti, tuzatish kerak",
       address: "Chilonzor, Toshkent",
@@ -64,6 +70,17 @@ function RequestPageInner() {
       .then((r) => r.json())
       .then((data: Category[]) => setCategories(data))
       .catch(() => setCategories([]))
+
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.profile) {
+          setProfile(data.profile)
+          if (data.profile.fullName) setValue("customerName", data.profile.fullName)
+          if (data.profile.phone) setValue("customerPhone", data.profile.phone)
+        }
+      })
+      .catch(() => setProfile(null))
   }, [])
 
   const selectedCategory = useMemo(
@@ -171,9 +188,17 @@ function RequestPageInner() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Input className="h-11 rounded-xl border-slate-300 bg-white" placeholder="Ismingiz" {...register("customerName")} />
-          <Input className="h-11 rounded-xl border-slate-300 bg-white" placeholder="+998..." {...register("customerPhone")} />
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5">
+          <p className="text-xs font-bold text-slate-600">Aloqa ma'lumoti (Account dan olinadi)</p>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <Input className="h-10 rounded-xl border-slate-300 bg-white" placeholder="Ismingiz" {...register("customerName")} />
+            <Input className="h-10 rounded-xl border-slate-300 bg-white" placeholder="+998..." {...register("customerPhone")} />
+          </div>
+          {!profile?.phone && (
+            <p className="mt-1 text-xs text-amber-700">
+              Telefon raqamingizni <a className="font-bold underline" href="/account">Account</a> bo'limida saqlang.
+            </p>
+          )}
         </div>
 
         <button

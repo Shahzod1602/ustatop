@@ -27,6 +27,16 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data
 
+    const profile = tg?.telegramId
+      ? await prisma.customerProfile.findUnique({ where: { telegramId: tg.telegramId } })
+      : null
+
+    const customerName = data.customerName?.trim() || profile?.fullName || tg?.firstName || "Mijoz"
+    const customerPhone = data.customerPhone?.trim() || profile?.phone
+    if (!customerPhone) {
+      return NextResponse.json({ error: "Telefon raqam topilmadi. Account bo'limida raqamni kiriting." }, { status: 400 })
+    }
+
     // Verify category exists
     const category = await prisma.category.findUnique({ where: { id: data.categoryId } })
     if (!category) {
@@ -36,8 +46,8 @@ export async function POST(req: NextRequest) {
     // Create service request
     const request = await prisma.serviceRequest.create({
       data: {
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
+        customerName,
+        customerPhone,
         customerTelegramId: tg?.telegramId,
         title: data.title,
         description: data.description,

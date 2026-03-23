@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Search, Mail, Star, ChevronRight } from "lucide-react"
+import { Search, Mail, Star, ChevronRight, UserCircle2 } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
@@ -46,6 +46,13 @@ export default async function HomePage() {
             <Mail className="h-4 w-4" />
           </button>
         </div>
+        <Link
+          href="/account"
+          className="mb-3 inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold"
+        >
+          <UserCircle2 className="h-4 w-4" />
+          Account
+        </Link>
 
         <div className="rounded-2xl bg-white/95 px-3 py-2 text-slate-400">
           <div className="flex items-center gap-2">

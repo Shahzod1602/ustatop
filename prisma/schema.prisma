@@ -83,8 +83,36 @@ model Master {
   reviews       Review[]
   acceptedRequests ServiceRequest[] @relation("MasterAcceptedRequests")
   documents     VerificationDocument[]
+  posts         MasterPost[]
 
   @@map("masters")
+}
+
+model CustomerProfile {
+  id         String   @id @default(cuid())
+  telegramId String   @unique @map("telegram_id")
+  fullName   String
+  phone      String?
+  city       String?  @default("Toshkent")
+  isMaster   Boolean  @default(false) @map("is_master")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("customer_profiles")
+}
+
+model MasterPost {
+  id        String   @id @default(cuid())
+  masterId  String
+  title     String
+  content   String
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  master Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@map("master_posts")
 }
 
 // ─────────────────────────────────────────────

@@ -4,7 +4,14 @@ import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
-type Params = Promise<{ requestId?: string; masterId?: string; city?: string; minRating?: string; sort?: string }>
+type Params = Promise<{
+  requestId?: string
+  masterId?: string
+  city?: string
+  minRating?: string
+  sort?: string
+  q?: string
+}>
 
 function initials(fullName: string) {
   return fullName
@@ -22,11 +29,12 @@ function extractPrice(bio?: string | null) {
 }
 
 export default async function MastersPage({ searchParams }: { searchParams: Params }) {
-  const { requestId, masterId, city, minRating: minRatingRaw, sort } = await searchParams
+  const { requestId, masterId, city, minRating: minRatingRaw, sort, q } = await searchParams
   const minRating = minRatingRaw ? Number(minRatingRaw) : undefined
 
   const whereBase = {
     isActive: true,
+    ...(q ? { fullName: { contains: q, mode: "insensitive" as const } } : {}),
     ...(city ? { serviceArea: { contains: city, mode: "insensitive" as const } } : {}),
     ...(minRating && !Number.isNaN(minRating) ? { rating: { gte: minRating } } : {}),
   }
@@ -34,7 +42,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
   let masters = await prisma.master.findMany({
     where: whereBase,
     orderBy: sort === "new" ? [{ createdAt: "desc" }] : [{ isVerified: "desc" }, { rating: "desc" }],
-    take: 12,
+    take: 20,
     select: {
       id: true,
       fullName: true,
@@ -46,6 +54,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
       bio: true,
       serviceArea: true,
       categories: { include: { category: true }, take: 1 },
+      _count: { select: { posts: true } },
     },
   })
 
@@ -63,7 +72,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           categories: { some: { categoryId: request.categoryId } },
         },
         orderBy: sort === "new" ? [{ createdAt: "desc" }] : [{ isVerified: "desc" }, { rating: "desc" }],
-        take: 12,
+        take: 20,
         select: {
           id: true,
           fullName: true,
@@ -75,6 +84,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           bio: true,
           serviceArea: true,
           categories: { include: { category: true }, take: 1 },
+          _count: { select: { posts: true } },
         },
       })
     }
@@ -97,6 +107,22 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
 
       <div className="px-4 py-4">
         <p className="mb-3 text-lg font-extrabold text-[#1f3252]">{masters.length} ta ustalar topildi</p>
+
+        <form className="mb-3 grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-white p-2.5 sm:grid-cols-3">
+          <input
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Usta nomi..."
+            className="h-10 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#1d57b8]"
+          />
+          <input
+            name="city"
+            defaultValue={city ?? ""}
+            placeholder="Shahar / lokatsiya..."
+            className="h-10 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#1d57b8]"
+          />
+          <button className="h-10 rounded-lg bg-[#1d57b8] text-sm font-bold text-white">Qidirish</button>
+        </form>
 
         <div className="mb-3 grid grid-cols-3 gap-2 text-xs font-bold">
           <Link
@@ -150,13 +176,22 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
                     <MapPin className="h-3.5 w-3.5" />
                     {m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}
                   </div>
+                  <p className="mt-1 text-xs font-medium text-slate-500">Postlar: {m._count.posts}</p>
                 </div>
-                <a
-                  href={`tel:${m.phone}`}
-                  className="self-center rounded-lg bg-[linear-gradient(180deg,#ffcb45_0%,#f4b52c_100%)] px-4 py-2 text-sm font-extrabold text-[#163a70]"
-                >
-                  Tanlash
-                </a>
+                <div className="self-center space-y-1">
+                  <a
+                    href={`tel:${m.phone}`}
+                    className="block rounded-lg bg-[linear-gradient(180deg,#ffcb45_0%,#f4b52c_100%)] px-4 py-2 text-center text-sm font-extrabold text-[#163a70]"
+                  >
+                    Qo'ng'iroq
+                  </a>
+                  <Link
+                    href={`/usta/${m.id}`}
+                    className="block rounded-lg border border-[#1d57b8]/30 px-3 py-1.5 text-center text-xs font-bold text-[#1d57b8]"
+                  >
+                    Profil
+                  </Link>
+                </div>
               </div>
             </div>
           ))}

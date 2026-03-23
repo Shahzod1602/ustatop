@@ -9,6 +9,8 @@ build
 telegram-bot/.env
 telegram-bot/.venv
 telegram-bot/.venv312
+__pycache__/
+*.pyc
 
 *.log
 npm-debug.log*

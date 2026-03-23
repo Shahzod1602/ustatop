@@ -7,8 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  WEB_IMAGE_NAME: ${{ github.repository }}-web
-  BOT_IMAGE_NAME: ${{ github.repository }}-bot
+  WEB_IMAGE_NAME: shahzod1602/ustatop-web
+  BOT_IMAGE_NAME: shahzod1602/ustatop-bot
 
 jobs:
   test:

@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+
+  @@map("urgency_enum")
+}
+
+enum RequestStatus {
+  PENDING
+  MATCHED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+
+  @@map("request_status_enum")
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────
+// Category
+// ─────────────────────────────────────────────
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  nameUz    String
+  icon      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  masters  MasterCategory[]
+  requests ServiceRequest[]
+
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────
+// Master (service provider)
+// ─────────────────────────────────────────────
+
+model Master {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  fullName     String
+  phone        String   @unique
+  bio          String?
+  profilePhoto String?
+  serviceArea  String   @default("Toshkent") // city
+  isVerified   Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  telegramId   String?  @unique @map("telegram_id")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  categories    MasterCategory[]
+  reviews       Review[]
+  acceptedRequests ServiceRequest[] @relation("MasterAcceptedRequests")
+  documents     VerificationDocument[]
+
+  @@map("masters")
+}
+
+// ─────────────────────────────────────────────
+// Junction: Master ↔ Category
+// ─────────────────────────────────────────────
+
+model MasterCategory {
+  id         String @id @default(cuid())
+  masterId   String
+  categoryId String
+
+  master   Master   @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([masterId, categoryId])
+  @@map("master_categories")
+}
+
+// ─────────────────────────────────────────────
+// ServiceRequest (customer job posting)
+// ─────────────────────────────────────────────
+
+model ServiceRequest {
+  id              String        @id @default(cuid())
+  customerName    String
+  customerPhone   String
+  title           String
+  description     String
+  categoryId      String
+  urgency         Urgency       @default(MEDIUM)
+  status          RequestStatus @default(PENDING)
+  address         String?
+  city            String        @default("Toshkent")
+  latitude        Float?
+  longitude       Float?
+  masterId        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  category Category       @relation(fields: [categoryId], references: [id])
+  master   Master?        @relation("MasterAcceptedRequests", fields: [masterId], references: [id], onDelete: SetNull)
+  images   RequestImage[]
+  reviews  Review[]
+  customerTelegramId String? @map("customer_telegram_id")
+
+  @@map("service_requests")
+}
+
+// ─────────────────────────────────────────────
+// RequestImage
+// ─────────────────────────────────────────────
+
+model RequestImage {
+  id        String   @id @default(cuid())
+  requestId String
+  url       String
+  createdAt DateTime @default(now())
+
+  request ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("request_images")
+}
+
+// ─────────────────────────────────────────────
+// Review
+// ─────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(cuid())
+  requestId String   @unique
+  masterId  String
+  rating    Int      // 1–5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  request ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  master  Master         @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────
+// AdminUser
+// ─────────────────────────────────────────────
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+
+  @@map("admin_users")
+}
+
+// ─────────────────────────────────────────────
+// VerificationDocument
+// ─────────────────────────────────────────────
+
+model VerificationDocument {
+  id       String         @id @default(cuid())
+  masterId String
+  url      String
+  type     String         // e.g. "passport", "certificate", "license"
+  status   DocumentStatus @default(PENDING)
+
+  master Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@map("verification_documents")
+}

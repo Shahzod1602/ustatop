@@ -91,14 +91,14 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
   }
 
   if (masterId) {
-    masters = masters.filter((m) => m.id === masterId)
+    masters = masters.filter((m: (typeof masters)[number]) => m.id === masterId)
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f6fb]">
-      <header className="bg-[#1d57b8] px-4 pb-3 pt-safe pt-5 text-white">
+    <div className="min-h-screen bg-[#0e1420] text-slate-100">
+      <header className="border-b border-white/10 bg-[#141a27] px-4 pb-3 pt-safe pt-5">
         <div className="flex items-center gap-2">
-          <Link href="/" className="rounded-lg p-1.5 hover:bg-white/10">
+          <Link href="/" className="rounded-lg p-1.5 text-slate-300 hover:bg-white/10">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-lg font-extrabold">Ustalarni Topish</h1>
@@ -106,50 +106,50 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
       </header>
 
       <div className="px-4 py-4">
-        <p className="mb-3 text-lg font-extrabold text-[#1f3252]">{masters.length} ta ustalar topildi</p>
+        <p className="mb-3 text-lg font-extrabold text-slate-100">{masters.length} ta ustalar topildi</p>
 
-        <form className="mb-3 grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-white p-2.5 sm:grid-cols-3">
+        <form className="mb-3 grid grid-cols-1 gap-2 rounded-xl border border-white/10 bg-[#141b2a] p-2.5 sm:grid-cols-3">
           <input
             name="q"
             defaultValue={q ?? ""}
             placeholder="Usta nomi..."
-            className="h-10 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#1d57b8]"
+            className="h-10 rounded-lg border border-white/10 bg-[#0f1624] px-3 text-sm text-slate-100 outline-none focus:border-[#69d2d6]"
           />
           <input
             name="city"
             defaultValue={city ?? ""}
             placeholder="Shahar / lokatsiya..."
-            className="h-10 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#1d57b8]"
+            className="h-10 rounded-lg border border-white/10 bg-[#0f1624] px-3 text-sm text-slate-100 outline-none focus:border-[#69d2d6]"
           />
-          <button className="h-10 rounded-lg bg-[#1d57b8] text-sm font-bold text-white">Qidirish</button>
+          <button className="h-10 rounded-lg bg-[#69d2d6] text-sm font-bold text-[#0b1220]">Qidirish</button>
         </form>
 
         <div className="mb-3 grid grid-cols-3 gap-2 text-xs font-bold">
           <Link
             href={`/ustalar${requestId ? `?requestId=${requestId}` : ""}`}
-            className={`rounded-lg border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#1d57b8] bg-[#e9f1ff] text-[#1d57b8]" : "border-slate-200 bg-white text-slate-600"}`}
+            className={`rounded-lg border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#69d2d6] bg-[#102233] text-[#69d2d6]" : "border-white/10 bg-[#141b2a] text-slate-400"}`}
           >
             Barchasi
           </Link>
           <Link
             href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`}
-            className={`rounded-lg border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#1d57b8] bg-[#e9f1ff] text-[#1d57b8]" : "border-slate-200 bg-white text-slate-600"}`}
+            className={`rounded-lg border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#69d2d6] bg-[#102233] text-[#69d2d6]" : "border-white/10 bg-[#141b2a] text-slate-400"}`}
           >
             Reyting 4.5+
           </Link>
           <Link
             href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`}
-            className={`rounded-lg border px-2 py-2 text-center ${sort === "new" ? "border-[#1d57b8] bg-[#e9f1ff] text-[#1d57b8]" : "border-slate-200 bg-white text-slate-600"}`}
+            className={`rounded-lg border px-2 py-2 text-center ${sort === "new" ? "border-[#69d2d6] bg-[#102233] text-[#69d2d6]" : "border-white/10 bg-[#141b2a] text-slate-400"}`}
           >
             Yangi
           </Link>
         </div>
 
         <div className="space-y-3">
-          {masters.map((m) => (
-            <div key={m.id} className="rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
+          {masters.map((m: (typeof masters)[number]) => (
+            <div key={m.id} className="rounded-2xl border border-white/10 bg-[#141b2a] p-2.5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[#dbeafe] text-lg font-bold text-[#1d57b8]">
+                <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[#16344c] text-lg font-bold text-[#8ce7eb]">
                   {m.profilePhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-xl object-cover" />
@@ -158,14 +158,14 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[17px] font-extrabold text-[#1b4f9d]">{m.fullName}</p>
+                  <p className="truncate text-[17px] font-extrabold text-slate-100">{m.fullName}</p>
                   <div className="my-0.5 flex items-center gap-1">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star key={i} className={`h-4 w-4 ${i < Math.round(m.rating) ? "fill-[#f6b627] text-[#f6b627]" : "text-slate-300"}`} />
                     ))}
-                    <span className="ml-1 text-sm font-bold text-[#1f3252]">{m.rating.toFixed(1)}</span>
+                    <span className="ml-1 text-sm font-bold text-slate-200">{m.rating.toFixed(1)}</span>
                   </div>
-                  <p className="text-sm font-semibold text-slate-600">
+                  <p className="text-sm font-semibold text-slate-400">
                     {Math.max(1, Math.round(m.reviewCount / 6))} yil tajriba · {extractPrice(m.bio)}
                   </p>
                   <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
@@ -181,13 +181,13 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
                 <div className="self-center space-y-1">
                   <a
                     href={`tel:${m.phone}`}
-                    className="block rounded-lg bg-[linear-gradient(180deg,#ffcb45_0%,#f4b52c_100%)] px-4 py-2 text-center text-sm font-extrabold text-[#163a70]"
+                    className="block rounded-lg bg-[linear-gradient(180deg,#bfa44d_0%,#9b8237_100%)] px-4 py-2 text-center text-sm font-extrabold text-[#111827]"
                   >
                     Qo'ng'iroq
                   </a>
                   <Link
                     href={`/usta/${m.id}`}
-                    className="block rounded-lg border border-[#1d57b8]/30 px-3 py-1.5 text-center text-xs font-bold text-[#1d57b8]"
+                    className="block rounded-lg border border-[#69d2d6]/35 px-3 py-1.5 text-center text-xs font-bold text-[#69d2d6]"
                   >
                     Profil
                   </Link>
@@ -197,8 +197,8 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           ))}
         </div>
 
-        <div className="mt-4 h-28 rounded-2xl bg-[linear-gradient(135deg,#dbeafe_0%,#bfdbfe_35%,#e2e8f0_100%)] p-3">
-          <div className="h-full rounded-xl border border-white/80 bg-white/50" />
+        <div className="mt-4 h-28 rounded-2xl bg-[linear-gradient(135deg,#1d2a3f_0%,#16344c_45%,#102233_100%)] p-3">
+          <div className="h-full rounded-xl border border-white/10 bg-black/20" />
         </div>
       </div>
     </div>

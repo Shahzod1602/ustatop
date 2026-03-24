@@ -34,10 +34,10 @@ export default function MyRequestsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#f3f6fb]">
-      <header className="bg-[#1d57b8] px-4 pb-3 pt-safe pt-5 text-white">
+    <div className="min-h-screen bg-[#0e1420] text-slate-100">
+      <header className="border-b border-white/10 bg-[#141a27] px-4 pb-3 pt-safe pt-5">
         <div className="flex items-center gap-2">
-          <Link href="/" className="rounded-lg p-1.5 hover:bg-white/10">
+          <Link href="/" className="rounded-lg p-1.5 text-slate-300 hover:bg-white/10">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-lg font-extrabold">Mening So'rovlarim</h1>
@@ -45,17 +45,17 @@ export default function MyRequestsPage() {
       </header>
 
       <div className="space-y-3 px-4 py-4">
-        {loading && <p className="text-sm text-slate-500">Yuklanmoqda...</p>}
+        {loading && <p className="text-sm text-slate-400">Yuklanmoqda...</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         {!loading && !error && items.length === 0 && (
-          <p className="text-sm text-slate-500">Hozircha so'rovlar topilmadi.</p>
+          <p className="rounded-xl border border-white/10 bg-[#141b2a] p-3 text-sm text-slate-400">Hozircha so'rovlar topilmadi.</p>
         )}
 
         {items.map((r) => (
-          <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div key={r.id} className="rounded-2xl border border-white/10 bg-[#141b2a] p-3 shadow-sm">
             <div className="mb-2 flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-extrabold text-[#1f3252]">
+                <p className="text-sm font-extrabold text-slate-100">
                   {r.category.icon} {r.title}
                 </p>
                 <p className="text-xs font-medium text-slate-500">{r.category.nameUz} · {r.city}</p>
@@ -72,8 +72,8 @@ export default function MyRequestsPage() {
             </div>
 
             {r.master && (
-              <div className="rounded-xl border border-slate-200 bg-[#f8fbff] p-2 text-xs">
-                <p className="mb-1 inline-flex items-center gap-1 font-bold text-[#1d57b8]">
+              <div className="rounded-xl border border-white/10 bg-[#0f1624] p-2 text-xs">
+                <p className="mb-1 inline-flex items-center gap-1 font-bold text-[#69d2d6]">
                   <UserRound className="h-3.5 w-3.5" />
                   Biriktirilgan usta: {r.master.fullName}
                 </p>

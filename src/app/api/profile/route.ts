@@ -10,19 +10,30 @@ export async function GET() {
       return NextResponse.json({ error: "Telegram session topilmadi" }, { status: 401 })
     }
 
-    const profile = await prisma.customerProfile.findUnique({
-      where: { telegramId: tg.telegramId },
-    })
+    const [profile, linkedMaster] = await Promise.all([
+      prisma.customerProfile.findUnique({
+        where: { telegramId: tg.telegramId },
+      }),
+      prisma.master.findFirst({
+        where: { telegramId: tg.telegramId },
+        select: { id: true, fullName: true, phone: true },
+      }),
+    ])
 
-    return NextResponse.json({
-      profile: profile ?? {
-        telegramId: tg.telegramId,
-        fullName: tg.firstName ?? "",
-        phone: "",
-        city: "Toshkent",
-        isMaster: false,
-      },
-    })
+    const resolvedProfile = profile
+      ? {
+          ...profile,
+          isMaster: profile.isMaster || !!linkedMaster,
+        }
+      : {
+          telegramId: tg.telegramId,
+          fullName: linkedMaster?.fullName ?? tg.firstName ?? "",
+          phone: linkedMaster?.phone ?? "",
+          city: "Toshkent",
+          isMaster: !!linkedMaster,
+        }
+
+    return NextResponse.json({ profile: resolvedProfile })
   } catch (err) {
     console.error("[GET /api/profile]", err)
     return NextResponse.json({ error: "Server xatoligi" }, { status: 500 })
@@ -35,6 +46,11 @@ export async function POST(req: NextRequest) {
     if (!tg?.telegramId) {
       return NextResponse.json({ error: "Telegram session topilmadi" }, { status: 401 })
     }
+
+    const linkedMaster = await prisma.master.findFirst({
+      where: { telegramId: tg.telegramId },
+      select: { id: true },
+    })
 
     const body = await req.json()
     const parsed = customerProfileSchema.safeParse(body)
@@ -57,6 +73,7 @@ export async function POST(req: NextRequest) {
         fullName,
         phone,
         city,
+        isMaster: !!linkedMaster,
       },
     })
 

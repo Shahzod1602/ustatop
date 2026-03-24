@@ -19,6 +19,18 @@ interface PostItem {
   createdAt: string
 }
 
+async function ensureTelegramSession() {
+  if (typeof window === "undefined") return
+  const initData = window.Telegram?.WebApp?.initData
+  if (!initData) return
+
+  await fetch("/api/telegram/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ initData }),
+  }).catch(() => {})
+}
+
 export default function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [posts, setPosts] = useState<PostItem[]>([])
@@ -32,11 +44,19 @@ export default function AccountPage() {
     setLoading(true)
     setMessage("")
     try {
-      const [profileRes, postsRes] = await Promise.all([fetch("/api/profile"), fetch("/api/master-posts")])
+      await ensureTelegramSession()
+
+      let profileRes = await fetch("/api/profile")
+      if (profileRes.status === 401) {
+        await ensureTelegramSession()
+        profileRes = await fetch("/api/profile")
+      }
       const profileJson = await profileRes.json()
-      const postsJson = await postsRes.json()
 
       if (!profileRes.ok) throw new Error(profileJson.error ?? "Profilni olishda xatolik")
+
+      const postsRes = await fetch("/api/master-posts")
+      const postsJson = await postsRes.json()
 
       setProfile(profileJson.profile)
       setForm({

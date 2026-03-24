@@ -20,19 +20,19 @@ export default async function AdminReviewsPage() {
     : 0
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Sharhlar</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl heading-gradient">Sharhlar</h1>
+        <p className="text-sm text-slate-400">
           {reviews.length} ta sharh · O&apos;rtacha reyting: ⭐ {avgRating.toFixed(1)}
         </p>
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
+      <Card className="surface-card overflow-hidden border-0 bg-transparent">
+        <CardHeader className="border-b border-white/10 pb-3">
           <CardTitle className="text-base">Barcha sharhlar</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 mt-4">
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>

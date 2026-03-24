@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { Users, ClipboardList, Star, CheckCircle, Clock, XCircle } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, ClipboardList, Star, CheckCircle, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn, getStatusColor, getStatusLabel } from "@/lib/utils"
 
@@ -25,96 +24,79 @@ export default async function AdminDashboard() {
     prisma.serviceRequest.count({ where: { status: "PENDING" } }),
     prisma.serviceRequest.count({ where: { status: "COMPLETED" } }),
     prisma.review.count(),
-    prisma.serviceRequest.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: { category: true },
-    }),
-    prisma.master.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: { categories: { include: { category: true }, take: 2 } },
-    }),
+    prisma.serviceRequest.findMany({ orderBy: { createdAt: "desc" }, take: 6, include: { category: true } }),
+    prisma.master.findMany({ orderBy: { createdAt: "desc" }, take: 6, include: { categories: { include: { category: true }, take: 2 } } }),
   ])
 
   const stats = [
-    { label: "Jami ustalar", value: totalMasters, icon: Users, sub: `${verifiedMasters} tasdiqlangan`, color: "text-blue-600 bg-blue-50" },
-    { label: "Tasdiq kutmoqda", value: pendingMasters, icon: Clock, sub: "Usta tasdiqlanmagan", color: "text-orange-600 bg-orange-50" },
-    { label: "Jami so'rovlar", value: totalRequests, icon: ClipboardList, sub: `${pendingRequests} kutilmoqda`, color: "text-purple-600 bg-purple-50" },
-    { label: "Yakunlangan", value: completedRequests, icon: CheckCircle, sub: `${totalReviews} sharh`, color: "text-green-600 bg-green-50" },
+    { label: "Jami ustalar", value: totalMasters, icon: Users, sub: `${verifiedMasters} tasdiqlangan`, tone: "from-cyan-200 to-cyan-400" },
+    { label: "Tasdiq kutmoqda", value: pendingMasters, icon: Clock, sub: "Profil tekshiruvi", tone: "from-amber-200 to-amber-400" },
+    { label: "Jami so'rovlar", value: totalRequests, icon: ClipboardList, sub: `${pendingRequests} faol`, tone: "from-indigo-200 to-indigo-400" },
+    { label: "Yakunlangan", value: completedRequests, icon: CheckCircle, sub: `${totalReviews} sharh`, tone: "from-emerald-200 to-emerald-400" },
   ]
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">UstaTop boshqaruv paneli</p>
+        <h1 className="text-2xl heading-gradient">Admin Dashboard</h1>
+        <p className="text-sm text-slate-400">Platforma holati va so'nggi faollik</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, sub, color }) => (
-          <Card key={label}>
-            <CardContent className="p-5">
-              <div className={cn("inline-flex h-10 w-10 items-center justify-center rounded-lg mb-3", color)}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <p className="text-3xl font-bold">{value}</p>
-              <p className="text-sm font-medium mt-0.5">{label}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {stats.map(({ label, value, icon: Icon, sub, tone }) => (
+          <div key={label} className="surface-card p-4">
+            <div className={cn("mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br text-[#0b1220]", tone)}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <p className="text-3xl font-extrabold text-slate-100">{value}</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-200">{label}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{sub}</p>
+          </div>
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Recent requests */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Oxirgi so&apos;rovlar</CardTitle>
-            <a href="/admin/requests" className="text-xs text-primary hover:underline">Barchasi</a>
-          </CardHeader>
-          <CardContent className="p-0">
+      <div className="grid gap-4 xl:grid-cols-2">
+        <section className="surface-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <p className="text-sm font-extrabold">Oxirgi so'rovlar</p>
+            <a href="/admin/requests" className="text-xs font-semibold text-[#89e8ed]">Barchasi</a>
+          </div>
+          <div>
             {recentRequests.map((req, i) => (
-              <div key={req.id} className={cn("flex items-center gap-3 px-5 py-3", i < recentRequests.length - 1 && "border-b")}>
+              <div key={req.id} className={cn("flex items-center gap-3 px-4 py-3", i < recentRequests.length - 1 && "border-b border-white/10") }>
                 <span className="text-xl">{req.category.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{req.title}</p>
-                  <p className="text-xs text-muted-foreground">{req.city} · {req.customerPhone}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-100">{req.title}</p>
+                  <p className="text-xs text-slate-500">{req.city} · {req.customerPhone}</p>
                 </div>
-                <Badge className={cn("text-xs shrink-0", getStatusColor(req.status))}>
-                  {getStatusLabel(req.status)}
+                <Badge className={cn("text-xs", getStatusColor(req.status))}>{getStatusLabel(req.status)}</Badge>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="surface-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <p className="text-sm font-extrabold">Yangi ustalar</p>
+            <a href="/admin/masters" className="text-xs font-semibold text-[#89e8ed]">Barchasi</a>
+          </div>
+          <div>
+            {recentMasters.map((master, i) => (
+              <div key={master.id} className={cn("flex items-center gap-3 px-4 py-3", i < recentMasters.length - 1 && "border-b border-white/10") }>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#153044] text-xs font-bold text-[#8ce7eb]">
+                  {master.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-100">{master.fullName}</p>
+                  <p className="text-xs text-slate-500">{master.serviceArea}</p>
+                </div>
+                <Badge className={master.isVerified ? "border-emerald-300/40 bg-emerald-400/15 text-emerald-200" : "border-amber-300/40 bg-amber-400/15 text-amber-200"}>
+                  {master.isVerified ? "Tasdiqlangan" : "Kutilmoqda"}
                 </Badge>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        {/* Recent masters */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Yangi ustalar</CardTitle>
-            <a href="/admin/masters" className="text-xs text-primary hover:underline">Barchasi</a>
-          </CardHeader>
-          <CardContent className="p-0">
-            {recentMasters.map((master, i) => (
-              <div key={master.id} className={cn("flex items-center gap-3 px-5 py-3", i < recentMasters.length - 1 && "border-b")}>
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                  {master.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{master.fullName}</p>
-                  <p className="text-xs text-muted-foreground">{master.serviceArea}</p>
-                </div>
-                {master.isVerified ? (
-                  <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200 shrink-0">Tasdiqlangan</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs shrink-0">Kutilmoqda</Badge>
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
     </div>
   )

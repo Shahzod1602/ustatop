@@ -1,95 +1,48 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* --------------------------------------------------------------------------
-   shadcn/ui CSS custom properties — light mode
-   -------------------------------------------------------------------------- */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 222 46% 8%;
+    --foreground: 210 20% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 222 36% 12%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 222 36% 12%;
+    --popover-foreground: 210 20% 96%;
 
-    /* Brand primary: warm orange — reflects UstaTop's craft/artisan theme */
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 184 62% 61%;
+    --primary-foreground: 220 47% 10%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 24% 16%;
+    --secondary-foreground: 210 20% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 22% 18%;
+    --muted-foreground: 216 16% 72%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 43 95% 61%;
+    --accent-foreground: 223 47% 12%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 78% 61%;
+    --destructive-foreground: 210 20% 96%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 24 95% 53%;
+    --border: 214 18% 24%;
+    --input: 214 18% 24%;
+    --ring: 184 62% 61%;
 
-    --radius: 0.5rem;
+    --radius: 0.8rem;
 
-    /* Chart colours */
-    --chart-1: 24 95% 53%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 184 62% 61%;
+    --chart-2: 43 95% 61%;
+    --chart-3: 196 70% 56%;
+    --chart-4: 160 58% 45%;
+    --chart-5: 22 88% 62%;
   }
 
-  /* --------------------------------------------------------------------------
-     shadcn/ui CSS custom properties — dark mode
-     -------------------------------------------------------------------------- */
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 24 95% 53%;
-
-    --chart-1: 24 95% 53%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Base reset & sensible defaults
-   -------------------------------------------------------------------------- */
-@layer base {
   * {
     @apply border-border;
   }
@@ -101,42 +54,41 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Manrope", "Segoe UI", sans-serif;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(80% 40% at 5% -10%, hsl(184 62% 61% / 0.22), transparent 58%),
+      radial-gradient(70% 34% at 96% 10%, hsl(43 95% 61% / 0.14), transparent 62%),
+      linear-gradient(180deg, #0b1019 0%, #070a11 100%);
+    background-attachment: fixed;
   }
 
-  /* Typography hierarchy */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+  html[data-ui-theme="minimal"] body {
+    background-image: linear-gradient(180deg, #0d121a 0%, #0b0f16 100%);
   }
 
-  h1 { @apply text-4xl; }
-  h2 { @apply text-3xl; }
-  h3 { @apply text-2xl; }
-  h4 { @apply text-xl; }
-  h5 { @apply text-lg; }
-  h6 { @apply text-base; }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Space Grotesk", "Manrope", sans-serif;
+    @apply font-bold tracking-tight;
+  }
 
-  /* Focus ring — consistent across interactive elements */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
-  /* Remove default list styles when used inside nav/buttons */
-  nav ul,
-  nav ol {
-    @apply list-none p-0 m-0;
-  }
-
-  /* Smooth image rendering */
   img,
   video {
     @apply max-w-full h-auto;
   }
 
-  /* Form element baseline */
   input,
   textarea,
   select {
@@ -144,69 +96,59 @@
   }
 }
 
-/* --------------------------------------------------------------------------
-   Component utilities
-   -------------------------------------------------------------------------- */
+html[data-ui-theme="minimal"] {
+  --background: 220 25% 10%;
+  --foreground: 210 20% 95%;
+  --card: 220 22% 12%;
+  --card-foreground: 210 20% 95%;
+  --popover: 220 22% 12%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 190 45% 62%;
+  --primary-foreground: 220 47% 10%;
+  --secondary: 220 16% 17%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 220 15% 18%;
+  --muted-foreground: 216 12% 72%;
+  --accent: 190 45% 62%;
+  --accent-foreground: 220 47% 10%;
+}
+
 @layer components {
-  /* Container variant for page sections */
-  .container-narrow {
-    @apply max-w-3xl mx-auto px-4 sm:px-6 lg:px-8;
+  .surface-card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.045] shadow-[0_10px_30px_rgba(0,0,0,0.26)] backdrop-blur;
   }
 
-  /* Card hover effect */
-  .card-hover {
-    @apply transition-shadow duration-200 hover:shadow-md;
+  .heading-gradient {
+    @apply bg-[linear-gradient(110deg,#eaf7ff_0%,#c4eef2_45%,#f5d989_100%)] bg-clip-text text-transparent;
   }
 
-  /* Status badge base */
-  .badge-base {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  .chip {
+    @apply inline-flex items-center rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200;
   }
 
-  /* Full-page loading overlay */
-  .loading-overlay {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm;
+  .action-primary {
+    @apply rounded-xl bg-[linear-gradient(180deg,#67d6dc_0%,#4caebf_100%)] px-4 py-2.5 font-bold text-[#07131b] shadow-[0_8px_20px_rgba(102,212,219,0.3)] transition hover:brightness-105;
   }
 
-  /* Section padding shorthand */
-  .section-padding {
-    @apply py-12 sm:py-16 lg:py-20;
-  }
-
-  /* Form field wrapper */
-  .form-field {
-    @apply flex flex-col gap-1.5;
-  }
-
-  /* Gradient hero background */
-  .hero-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(24 95% 53% / 0.08) 0%,
-      hsl(24 95% 53% / 0.02) 100%
-    );
+  .action-amber {
+    @apply rounded-xl bg-[linear-gradient(180deg,#f3cc63_0%,#d8ab3d_100%)] px-4 py-2.5 font-bold text-[#15120a] shadow-[0_8px_20px_rgba(214,163,60,0.28)] transition hover:brightness-105;
   }
 }
 
-/* --------------------------------------------------------------------------
-   Utility overrides
-   -------------------------------------------------------------------------- */
 @layer utilities {
-  /* Hide scrollbar but keep scroll functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 
-  /* Text balance for headings */
   .text-balance {
     text-wrap: balance;
   }
 
-  /* Truncate multi-line text */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -221,28 +163,11 @@
     overflow: hidden;
   }
 
-  /* Safe area padding for mobile notch/home-indicator */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
   .pt-safe {
     padding-top: env(safe-area-inset-top);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Print styles
-   -------------------------------------------------------------------------- */
-@media print {
-  body {
-    @apply bg-white text-black;
-  }
-
-  nav,
-  aside,
-  footer,
-  button,
-  .no-print {
-    display: none !important;
   }
 }

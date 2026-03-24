@@ -15,17 +15,17 @@ export default async function AdminCategoriesPage() {
   })
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Kategoriyalar</h1>
-        <p className="text-muted-foreground">{categories.length} ta kategoriya</p>
+        <h1 className="text-2xl heading-gradient">Kategoriyalar</h1>
+        <p className="text-sm text-slate-400">{categories.length} ta kategoriya</p>
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
+      <Card className="surface-card overflow-hidden border-0 bg-transparent">
+        <CardHeader className="border-b border-white/10 pb-3">
           <CardTitle className="text-base">Barcha kategoriyalar</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 mt-4">
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -49,7 +49,7 @@ export default async function AdminCategoriesPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{cat.slug}</code>
+                    <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs">{cat.slug}</code>
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">{cat._count.masters}</Badge>

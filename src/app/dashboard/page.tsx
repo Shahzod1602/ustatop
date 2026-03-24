@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Star, CheckCircle, Clock, Briefcase } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { RequestCard } from "@/components/shared/request-card"
 
 export const dynamic = "force-dynamic"
@@ -49,29 +49,29 @@ export default async function DashboardPage() {
   })
 
   const stats = [
-    { label: "Yangi so'rovlar", value: requests.filter((r) => r.status === "MATCHED").length, icon: Clock, color: "text-yellow-600 bg-yellow-100" },
-    { label: "Qabul qilingan", value: requests.filter((r) => r.status === "ACCEPTED").length, icon: Briefcase, color: "text-blue-600 bg-blue-100" },
-    { label: "Yakunlangan", value: completedCount, icon: CheckCircle, color: "text-green-600 bg-green-100" },
-    { label: "Reyting", value: master.rating.toFixed(1), icon: Star, color: "text-orange-600 bg-orange-100" },
+    { label: "Yangi so'rovlar", value: requests.filter((r) => r.status === "MATCHED").length, icon: Clock, tone: "from-amber-200 to-amber-400" },
+    { label: "Qabul qilingan", value: requests.filter((r) => r.status === "ACCEPTED").length, icon: Briefcase, tone: "from-cyan-200 to-cyan-400" },
+    { label: "Yakunlangan", value: completedCount, icon: CheckCircle, tone: "from-emerald-200 to-emerald-400" },
+    { label: "Reyting", value: master.rating.toFixed(1), icon: Star, tone: "from-orange-200 to-orange-400" },
   ]
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Xush kelibsiz, {master.fullName.split(" ")[0]}!</h1>
-        <p className="text-muted-foreground">Sizning dashboard</p>
+        <h1 className="text-2xl heading-gradient">Xush kelibsiz, {master.fullName.split(" ")[0]}!</h1>
+        <p className="text-sm text-slate-400">Sizning ish oqimingiz va kiruvchi so'rovlar</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <Card key={label}>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {stats.map(({ label, value, icon: Icon, tone }) => (
+          <Card key={label} className="surface-card border-0 bg-transparent">
             <CardContent className="p-4">
-              <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${color} mb-3`}>
+              <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-[#0b1220] ${tone}`}>
                 <Icon className="h-4 w-4" />
               </div>
-              <p className="text-2xl font-bold">{value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+              <p className="text-2xl font-bold text-slate-100">{value}</p>
+              <p className="mt-0.5 text-xs text-slate-400">{label}</p>
             </CardContent>
           </Card>
         ))}
@@ -79,13 +79,13 @@ export default async function DashboardPage() {
 
       {/* Requests */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Kiruvchi so&apos;rovlar</h2>
+        <h2 className="mb-3 text-lg font-semibold">Kiruvchi so&apos;rovlar</h2>
         {requests.length === 0 ? (
-          <Card>
+          <Card className="surface-card border-0 bg-transparent">
             <CardContent className="py-12 text-center">
-              <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="font-medium">Hozircha yangi so&apos;rovlar yo&apos;q</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <Clock className="mx-auto mb-3 h-10 w-10 text-slate-500" />
+              <p className="font-medium text-slate-200">Hozircha yangi so&apos;rovlar yo&apos;q</p>
+              <p className="mt-1 text-sm text-slate-500">
                 Sizning hududingizdan so&apos;rovlar kelganda shu yerda ko&apos;rinadi
               </p>
             </CardContent>
@@ -115,18 +115,18 @@ export default async function DashboardPage() {
       {/* Recent reviews */}
       {master.reviews.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold mb-4">Oxirgi sharhlar</h2>
+          <h2 className="mb-3 text-lg font-semibold">Oxirgi sharhlar</h2>
           <div className="space-y-3">
             {master.reviews.map((review) => (
-              <Card key={review.id}>
+              <Card key={review.id} className="surface-card border-0 bg-transparent">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-1">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <span key={i} className={i < review.rating ? "text-yellow-400" : "text-gray-300"}>★</span>
                     ))}
-                    <span className="text-sm font-medium">{review.rating}/5</span>
+                    <span className="text-sm font-medium text-slate-200">{review.rating}/5</span>
                   </div>
-                  {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
+                  {review.comment && <p className="text-sm text-slate-400">{review.comment}</p>}
                 </CardContent>
               </Card>
             ))}

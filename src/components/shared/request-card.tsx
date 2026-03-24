@@ -57,21 +57,21 @@ export function RequestCard({
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="surface-card border-0 bg-transparent transition hover:border-white/20">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-lg">{categoryIcon}</span>
-              <span className="text-xs text-muted-foreground font-medium">{categoryNameUz}</span>
+              <span className="text-xs font-medium text-slate-400">{categoryNameUz}</span>
               <Badge className={cn("text-xs", getUrgencyColor(urgency))}>{getUrgencyLabel(urgency)}</Badge>
               <Badge className={cn("text-xs", getStatusColor(status))}>{getStatusLabel(status)}</Badge>
             </div>
-            <h3 className="font-semibold text-base leading-tight truncate">{title}</h3>
+            <h3 className="truncate text-base font-semibold leading-tight text-slate-100">{title}</h3>
           </div>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-muted-foreground hover:text-foreground transition-colors mt-1 shrink-0"
+            className="mt-1 shrink-0 text-slate-500 transition-colors hover:text-slate-200"
           >
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
@@ -80,15 +80,15 @@ export function RequestCard({
 
       <CardContent className="pt-0 space-y-3">
         {expanded && (
-          <p className="text-sm text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3">
+          <p className="border-l-2 border-primary/30 pl-3 text-sm leading-relaxed text-slate-400">
             {description}
           </p>
         )}
 
-        <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-1.5 text-sm text-slate-400">
           <div className="flex items-center gap-2">
             <Phone className="h-3.5 w-3.5 shrink-0" />
-            <a href={`tel:${customerPhone}`} className="hover:text-primary transition-colors">
+            <a href={`tel:${customerPhone}`} className="transition-colors hover:text-primary">
               {customerPhone}
             </a>
           </div>
@@ -110,7 +110,7 @@ export function RequestCard({
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+              className="flex-1 border-red-300/35 bg-red-400/10 text-red-200 hover:bg-red-400/20"
               onClick={() => handleAction("reject")}
               disabled={!!loading}
             >
@@ -118,7 +118,7 @@ export function RequestCard({
             </Button>
             <Button
               size="sm"
-              className="flex-1"
+              className="flex-1 bg-[linear-gradient(180deg,#67d6dc_0%,#4caebf_100%)] text-[#07131b] hover:brightness-105"
               onClick={() => handleAction("accept")}
               disabled={!!loading}
             >
@@ -130,7 +130,7 @@ export function RequestCard({
         {status === "ACCEPTED" && onComplete && (
           <Button
             size="sm"
-            className="w-full"
+            className="w-full bg-[linear-gradient(180deg,#67d6dc_0%,#4caebf_100%)] text-[#07131b] hover:brightness-105"
             onClick={() => handleAction("complete")}
             disabled={!!loading}
           >

@@ -13,14 +13,14 @@ export default async function AdminRequestsPage() {
   })
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">So&apos;rovlar</h1>
-        <p className="text-muted-foreground">{requests.length} ta so&apos;rov jami</p>
+        <h1 className="text-2xl heading-gradient">So&apos;rovlar</h1>
+        <p className="text-sm text-slate-400">{requests.length} ta so&apos;rov jami</p>
       </div>
 
       {/* Status summary */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {["PENDING", "MATCHED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((s) => {
           const count = requests.filter((r) => r.status === s).length
           return (
@@ -31,11 +31,11 @@ export default async function AdminRequestsPage() {
         })}
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
+      <Card className="surface-card overflow-hidden border-0 bg-transparent">
+        <CardHeader className="border-b border-white/10 pb-3">
           <CardTitle className="text-base">Barcha so&apos;rovlar</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 mt-4">
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

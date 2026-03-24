@@ -3,28 +3,21 @@ import { z } from "zod"
 // ─── Master Auth ──────────────────────────────────────────────────────────────
 
 export const masterLoginSchema = z.object({
-  email: z.string().email("Noto'g'ri email format"),
-  password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
+  phone: z
+    .string()
+    .regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
 })
 
-export const masterRegisterSchema = z
-  .object({
-    fullName: z.string().min(2, "Ism kamida 2 ta harfdan iborat bo'lishi kerak"),
-    email: z.string().email("Noto'g'ri email format"),
-    password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
-    confirmPassword: z.string(),
-    phone: z
-      .string()
-      .regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
-    serviceArea: z.string().min(2, "Xizmat hududini kiriting"),
-    categories: z.array(z.string()).min(1, "Kamida bitta kategoriya tanlang"),
-    bio: z.string().max(500, "Bio 500 belgidan oshmasligi kerak").optional(),
-    pricing: z.string().max(200, "Narx ma'lumoti 200 belgidan oshmasligi kerak").optional(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Parollar mos kelmaydi",
-    path: ["confirmPassword"],
-  })
+export const masterRegisterSchema = z.object({
+  fullName: z.string().min(2, "Ism kamida 2 ta harfdan iborat bo'lishi kerak"),
+  phone: z
+    .string()
+    .regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
+  serviceArea: z.string().min(2, "Xizmat hududini kiriting"),
+  categories: z.array(z.string()).min(1, "Kamida bitta kategoriya tanlang"),
+  bio: z.string().max(500, "Bio 500 belgidan oshmasligi kerak").optional(),
+  pricing: z.string().max(200, "Narx ma'lumoti 200 belgidan oshmasligi kerak").optional(),
+})
 
 export type MasterRegisterInput = z.infer<typeof masterRegisterSchema>
 export type MasterLoginInput = z.infer<typeof masterLoginSchema>

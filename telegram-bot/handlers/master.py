@@ -1,61 +1,112 @@
 """Master callbacks: accept/reject requests, link Telegram account."""
 
 import logging
+import uuid
 from aiogram import Router, F, Bot
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, Contact
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Master, ServiceRequest, AsyncSessionLocal, RequestStatusEnum
+from keyboards import share_phone_keyboard
+from models import (
+    Master,
+    MasterCategory,
+    Category,
+    ServiceRequest,
+    AsyncSessionLocal,
+    RequestStatusEnum,
+)
 
 logger = logging.getLogger(__name__)
 router = Router()
 
 
 class MasterLinkFlow(StatesGroup):
-    waiting_for_email = State()
+    waiting_for_contact = State()
+
+
+def _normalize_phone(phone: str) -> str:
+    normalized = phone.strip()
+    if not normalized.startswith("+"):
+        normalized = f"+{normalized}"
+    return normalized
 
 
 # ── Link Telegram account to master profile ────────────────────────────────
 
 @router.message(F.text == "🔗 Akkauntni ulash")
 async def start_link(message: Message, state: FSMContext) -> None:
-    await state.set_state(MasterLinkFlow.waiting_for_email)
+    await state.set_state(MasterLinkFlow.waiting_for_contact)
     await message.answer(
-        "📧 <b>Email manzilingizni kiriting:</b>\n"
-        "(UstaTop saytida ro'yxatdan o'tgan email)",
+        "📞 <b>Telefon raqamingizni ulashing:</b>\n"
+        "Agar bu raqam bilan akkaunt mavjud bo'lsa ulanadi,\n"
+        "bo'lmasa yangi akkaunt ochiladi.",
         parse_mode="HTML",
+        reply_markup=share_phone_keyboard(),
     )
 
 
-@router.message(MasterLinkFlow.waiting_for_email)
-async def link_email(message: Message, state: FSMContext) -> None:
-    email = message.text.strip().lower() if message.text else ""
-    if "@" not in email:
-        await message.answer("⚠️ Noto'g'ri email format.")
+@router.message(F.contact, MasterLinkFlow.waiting_for_contact)
+async def link_or_create_by_contact(message: Message, state: FSMContext) -> None:
+    contact: Contact = message.contact
+    if not message.from_user:
+        await message.answer("⚠️ Foydalanuvchi aniqlanmadi, qayta urinib ko'ring.")
         return
 
+    # Accept only self-shared contacts to prevent linking another person's number.
+    if contact.user_id and contact.user_id != message.from_user.id:
+        await message.answer("⚠️ Iltimos, faqat o'zingizning raqamingizni ulashing.")
+        return
+
+    phone = _normalize_phone(contact.phone_number)
+    full_name = " ".join(filter(None, [contact.first_name, contact.last_name])).strip()
+    if not full_name:
+        full_name = message.from_user.full_name or "Usta"
+
     async with AsyncSessionLocal() as session:
-        result = await session.execute(select(Master).filter(Master.email == email))
+        result = await session.execute(select(Master).filter(Master.phone == phone))
         master = result.scalar_one_or_none()
 
-        if not master:
-            await message.answer("❌ Bu email bilan hisob topilmadi.\nAvval saytda ro'yxatdan o'ting.")
+        tg_id = str(message.from_user.id)
+        if master and master.telegram_id and master.telegram_id != tg_id:
+            await message.answer("⚠️ Bu telefon raqam allaqachon boshqa Telegram akkauntiga ulangan.")
             await state.clear()
             return
 
-        if master.telegram_id and master.telegram_id != str(message.from_user.id):
-            await message.answer("⚠️ Bu hisob allaqachon boshqa Telegram akkauntiga ulangan.")
-            await state.clear()
-            return
+        if master:
+            await session.execute(
+                update(Master)
+                .where(Master.id == master.id)
+                .values(telegram_id=tg_id)
+            )
+        else:
+            safe_phone = phone.replace("+", "")
+            email = f"tg-{safe_phone}@tg.ustatop.local"
+            password = f"tg-{uuid.uuid4().hex}"
+            master = Master(
+                id=uuid.uuid4().hex[:20],
+                email=email,
+                password=password,
+                full_name=full_name,
+                phone=phone,
+                telegram_id=tg_id,
+                is_active=True,
+                is_verified=False,
+                service_area="Toshkent",
+            )
+            session.add(master)
+            default_category = (await session.execute(select(Category.id).order_by(Category.created_at.asc()))).scalar_one_or_none()
+            if default_category:
+                session.add(
+                    MasterCategory(
+                        id=uuid.uuid4().hex[:20],
+                        master_id=master.id,
+                        category_id=default_category,
+                    )
+                )
 
-        await session.execute(
-            update(Master)
-            .where(Master.id == master.id)
-            .values(telegram_id=str(message.from_user.id))
-        )
         await session.commit()
 
     await state.clear()
@@ -65,6 +116,11 @@ async def link_email(message: Message, state: FSMContext) -> None:
         f"Endi yangi so'rovlar haqida xabarnoma olasiz.",
         parse_mode="HTML",
     )
+
+
+@router.message(MasterLinkFlow.waiting_for_contact)
+async def link_contact_fallback(message: Message) -> None:
+    await message.answer("⚠️ Iltimos, tugma orqali telefon raqamingizni ulashing.")
 
 
 # ── Accept request ─────────────────────────────────────────────────────────

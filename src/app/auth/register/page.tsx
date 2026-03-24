@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CheckCircle, Loader2, Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react"
+import { CheckCircle, Loader2, ArrowLeft, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,7 +26,6 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1)
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const {
@@ -53,7 +52,7 @@ export default function RegisterPage() {
   }
 
   const goNextStep = async () => {
-    const valid = await trigger(["fullName", "email", "password", "confirmPassword", "phone"])
+    const valid = await trigger(["fullName", "phone"])
     if (valid) setStep(2)
   }
 
@@ -103,38 +102,9 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" placeholder="usta@example.com" {...register("email")} />
-                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-              </div>
-
-              <div className="space-y-1">
                 <Label htmlFor="phone">Telefon raqam *</Label>
                 <Input id="phone" placeholder="+998901234567" {...register("phone")} />
                 {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="password">Parol *</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Kamida 6 ta belgi"
-                    {...register("password")}
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="confirmPassword">Parolni tasdiqlang *</Label>
-                <Input id="confirmPassword" type="password" placeholder="••••••" {...register("confirmPassword")} />
-                {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>}
               </div>
 
               <Button type="button" className="w-full" onClick={goNextStep}>

@@ -2,7 +2,7 @@
 
 import logging
 from aiogram import Router, F
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
@@ -52,7 +52,7 @@ async def cmd_help(message: Message) -> None:
         "5. Telefon raqamingizni yuboring\n"
         "6. So'rovni tasdiqlang — usta topiladi!\n\n"
         "<b>Ustalar uchun:</b>\n"
-        "• /link_account — Telegram akkauntingizni ulashtiring\n"
+        "• /link_account — Telegram akkauntingizni telefon orqali ulashtiring\n"
         "• Yangi so'rovlar kelganda xabar olasiz\n"
         "• So'rovni qabul qiling yoki rad eting\n\n"
         "📞 Qo'llab-quvvatlash: @ustatop_support",
@@ -64,10 +64,11 @@ async def cmd_help(message: Message) -> None:
 async def link_account_cmd(message: Message) -> None:
     await message.answer(
         "🔗 <b>Akkauntni ulash</b>\n\n"
-        "«🔗 Akkauntni ulash» tugmasini bosing va emailingizni kiriting:",
+        "Pastdagi «🔗 Akkauntni ulash» tugmasini bosing.\n"
+        "Keyin telefon raqamingizni ulashasiz (email kerak emas).",
         parse_mode="HTML",
-        reply_markup=__import__('aiogram.types', fromlist=['ReplyKeyboardMarkup']).ReplyKeyboardMarkup(
-            keyboard=[[__import__('aiogram.types', fromlist=['KeyboardButton']).KeyboardButton(text="🔗 Akkauntni ulash")]],
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="🔗 Akkauntni ulash")]],
             resize_keyboard=True,
         ),
     )

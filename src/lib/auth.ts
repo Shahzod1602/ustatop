@@ -3,7 +3,7 @@ import type { DefaultSession } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcryptjs from "bcryptjs"
 import { prisma } from "@/lib/prisma"
-import { masterLoginSchema } from "@/lib/validations"
+import { adminLoginSchema, masterLoginSchema } from "@/lib/validations"
 import { authConfig } from "@/lib/auth.config"
 
 // ─── Type augmentation ────────────────────────────────────────────────────────
@@ -37,25 +37,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       id: "credentials",
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Parol", type: "password" },
+        phone: { label: "Telefon", type: "text" },
       },
       async authorize(credentials) {
         const parsed = masterLoginSchema.safeParse(credentials)
         if (!parsed.success) throw new Error("Noto'g'ri ma'lumotlar kiritildi")
 
-        const { email, password } = parsed.data
+        const { phone } = parsed.data
+        const normalizedPhone = phone.startsWith("+") ? phone : `+${phone}`
 
         const master = await prisma.master.findUnique({
-          where: { email: email.toLowerCase().trim() },
-          select: { id: true, email: true, fullName: true, password: true, isVerified: true, isActive: true },
+          where: { phone: normalizedPhone },
+          select: { id: true, email: true, fullName: true, isVerified: true, isActive: true },
         })
 
-        if (!master) throw new Error("Email yoki parol noto'g'ri")
+        if (!master) throw new Error("Bu telefon raqam bilan akkaunt topilmadi")
         if (!master.isActive) throw new Error("Akkauntingiz bloklangan. Administrator bilan bog'laning")
-
-        const ok = await bcryptjs.compare(password, master.password)
-        if (!ok) throw new Error("Email yoki parol noto'g'ri")
 
         return {
           id: master.id,
@@ -76,7 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Parol", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = masterLoginSchema.safeParse(credentials)
+        const parsed = adminLoginSchema.safeParse(credentials)
         if (!parsed.success) throw new Error("Noto'g'ri ma'lumotlar kiritildi")
 
         const { email, password } = parsed.data

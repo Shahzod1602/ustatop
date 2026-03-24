@@ -15,29 +15,26 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { fullName, email, password, phone, serviceArea, categories, bio, pricing } = parsed.data
+    const { fullName, phone, serviceArea, categories, bio, pricing } = parsed.data
+    const normalizedPhone = phone.startsWith("+") ? phone : `+${phone}`
 
-    // Check uniqueness
-    const existingEmail = await prisma.master.findUnique({ where: { email: email.toLowerCase() } })
-    if (existingEmail) {
-      return NextResponse.json({ error: "Bu email allaqachon ro'yxatdan o'tgan" }, { status: 409 })
-    }
-
-    const existingPhone = await prisma.master.findUnique({ where: { phone } })
+    // Check uniqueness by phone
+    const existingPhone = await prisma.master.findUnique({ where: { phone: normalizedPhone } })
     if (existingPhone) {
       return NextResponse.json({ error: "Bu telefon raqam allaqachon ro'yxatdan o'tgan" }, { status: 409 })
     }
 
-    // Hash password
-    const hashedPassword = await bcryptjs.hash(password, 12)
+    // Keep DB constraints satisfied, but email/password are not user-facing anymore.
+    const syntheticEmail = `ph-${normalizedPhone.replace(/\D/g, "")}@ustatop.local`
+    const hashedPassword = await bcryptjs.hash(`ph-${Date.now()}-${Math.random()}`, 10)
 
     // Create master with categories
     const master = await prisma.master.create({
       data: {
         fullName,
-        email: email.toLowerCase(),
+        email: syntheticEmail,
         password: hashedPassword,
-        phone,
+        phone: normalizedPhone,
         serviceArea,
         bio: bio ?? null,
         isVerified: false,

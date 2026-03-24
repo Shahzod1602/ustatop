@@ -212,7 +212,26 @@ async function main() {
     };
   });
 
-  const mastersData = [...baseMastersData, ...generatedMasters];
+  // Guaranteed demo: at least one dedicated master for every category
+  const perCategoryMasters = categoriesData.map((cat, i) => {
+    const area = areaPool[i % areaPool.length];
+    const phone = `+99893${String(5000000 + i).padStart(7, "0")}`;
+
+    return {
+      email: `demo.${cat.slug}@example.uz`,
+      fullName: `${cat.nameUz} Ustasi`,
+      phone,
+      bio: `${cat.nameUz} bo'yicha maxsus demo usta. ${area} hududida xizmat ko'rsatadi. Narxlar: 100,000 — 400,000 so'm`,
+      serviceArea: area,
+      isVerified: true,
+      isActive: true,
+      rating: Number((4.5 + (i % 3) * 0.1).toFixed(1)),
+      reviewCount: 12 + i,
+      categorySlugs: [cat.slug],
+    };
+  });
+
+  const mastersData = [...baseMastersData, ...generatedMasters, ...perCategoryMasters];
 
   const masters: Record<string, Awaited<ReturnType<typeof prisma.master.upsert>>> = {};
 

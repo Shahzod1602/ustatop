@@ -95,7 +95,7 @@ async function main() {
   // ─────────────────────────────────────────────
   console.log("👷 Seeding masters...");
 
-  const mastersData = [
+  const baseMastersData = [
     {
       email: "alisher.karimov@example.uz",
       fullName: "Alisher Karimov",
@@ -157,6 +157,62 @@ async function main() {
       categorySlugs: ["painting", "cleaning"],
     },
   ];
+
+  // Generate additional demo masters to reach ~30 total
+  const demoNames = [
+    "Azizbek Qodirov",
+    "Shoxrux Ergashev",
+    "Farrux Jo'rayev",
+    "Sanjar Ismoilov",
+    "Otabek Rustamov",
+    "Javohir Mamadaliyev",
+    "Bekzod To'xtayev",
+    "Anvar Iskandarov",
+    "Ulug'bek Matkarimov",
+    "Ibrohim Usmonov",
+    "Komiljon Qurbonov",
+    "Zokirjon Alimuhamedov",
+    "Sherzod G'aniev",
+    "Nodir Abdug'afforov",
+    "Shuhrat Xasanov",
+    "Suhrob Tursunov",
+    "Diyorbek Ortiqov",
+    "Jamshid Abdullayev",
+    "Samandar Murodov",
+    "Temurbek Norbo'tayev",
+    "Abror Yuldashev",
+    "Asadbek Sattorov",
+    "Dilshod Jalolov",
+    "Mirjalol Rajabov",
+    "Rustam Ochilov",
+  ];
+
+  const areaPool = ["Toshkent", "Samarqand", "Buxoro", "Namangan", "Andijon", "Farg'ona"];
+  const categoryPool = Object.keys(categories);
+
+  const generatedMasters = demoNames.map((fullName, i) => {
+    const slugA = categoryPool[i % categoryPool.length];
+    const slugB = categoryPool[(i + 3) % categoryPool.length];
+    const phone = `+99890${String(1234572 + i).padStart(7, "0")}`;
+    const rating = Number((4.1 + ((i % 9) * 0.1)).toFixed(1));
+    const reviewCount = 8 + (i * 3);
+    const area = areaPool[i % areaPool.length];
+
+    return {
+      email: `demo.master${i + 1}@example.uz`,
+      fullName,
+      phone,
+      bio: `${area} bo'yicha tezkor xizmat. Tajriba: ${3 + (i % 8)} yil. Narxlar: 80,000 — 350,000 so'm`,
+      serviceArea: area,
+      isVerified: i % 3 !== 0,
+      isActive: true,
+      rating,
+      reviewCount,
+      categorySlugs: slugA === slugB ? [slugA] : [slugA, slugB],
+    };
+  });
+
+  const mastersData = [...baseMastersData, ...generatedMasters];
 
   const masters: Record<string, Awaited<ReturnType<typeof prisma.master.upsert>>> = {};
 

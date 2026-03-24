@@ -87,6 +87,19 @@ class Master(Base):
     accepted_requests = relationship("ServiceRequest", back_populates="master")
 
 
+class CustomerProfile(Base):
+    __tablename__ = "customer_profiles"
+
+    id = Column(String, primary_key=True)
+    telegram_id = Column("telegram_id", String, unique=True, nullable=False)
+    full_name = Column("fullName", String, nullable=False)
+    phone = Column(String, nullable=True)
+    city = Column(String, nullable=True, default="Toshkent")
+    is_master = Column("is_master", Boolean, default=False)
+    created_at = Column("createdAt", DateTime, default=datetime.utcnow)
+    updated_at = Column("updatedAt", DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class MasterCategory(Base):
     __tablename__ = "master_categories"
     __table_args__ = (UniqueConstraint("masterId", "categoryId"),)

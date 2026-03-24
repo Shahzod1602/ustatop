@@ -7,11 +7,13 @@ from aiogram.types import CallbackQuery, Message, Contact
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from keyboards import share_phone_keyboard
 from models import (
     Master,
+    CustomerProfile,
     MasterCategory,
     Category,
     ServiceRequest,
@@ -106,6 +108,24 @@ async def link_or_create_by_contact(message: Message, state: FSMContext) -> None
                         category_id=default_category,
                     )
                 )
+
+        profile_stmt = pg_insert(CustomerProfile).values(
+            id=uuid.uuid4().hex[:20],
+            telegram_id=tg_id,
+            full_name=full_name,
+            phone=phone,
+            city="Toshkent",
+            is_master=True,
+        )
+        profile_stmt = profile_stmt.on_conflict_do_update(
+            index_elements=[CustomerProfile.telegram_id],
+            set_={
+                "full_name": full_name,
+                "phone": phone,
+                "is_master": True,
+            },
+        )
+        await session.execute(profile_stmt)
 
         await session.commit()
 

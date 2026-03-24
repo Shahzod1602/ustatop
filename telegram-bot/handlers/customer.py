@@ -7,13 +7,14 @@ from aiogram.types import Message, CallbackQuery, Contact, Location
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from keyboards import (
     categories_keyboard, share_phone_keyboard, share_location_keyboard,
-    urgency_keyboard, cancel_keyboard, main_menu_keyboard, remove_keyboard,
+    urgency_keyboard, cancel_keyboard, main_menu_keyboard,
 )
-from models import Category, ServiceRequest, AsyncSessionLocal, UrgencyEnum, RequestStatusEnum
+from models import Category, CustomerProfile, ServiceRequest, AsyncSessionLocal, UrgencyEnum, RequestStatusEnum
 from services import match_request, notify_masters
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,43 @@ class RequestFlow(StatesGroup):
 async def get_categories(session: AsyncSession) -> list[Category]:
     result = await session.execute(select(Category).order_by(Category.name))
     return result.scalars().all()
+
+
+def _normalize_phone(phone: str) -> str:
+    return phone if phone.startswith("+") else f"+{phone}"
+
+
+async def _upsert_customer_profile(
+    message: Message,
+    state: FSMContext,
+    full_name: str,
+    phone: str,
+) -> None:
+    if not message.from_user:
+        return
+
+    data = await state.get_data()
+    city = data.get("city") if isinstance(data.get("city"), str) else "Toshkent"
+
+    async with AsyncSessionLocal() as session:
+        stmt = pg_insert(CustomerProfile).values(
+            id=uuid.uuid4().hex[:20],
+            telegram_id=str(message.from_user.id),
+            full_name=full_name,
+            phone=phone,
+            city=city,
+            is_master=False,
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[CustomerProfile.telegram_id],
+            set_={
+                "full_name": full_name,
+                "phone": phone,
+                "city": city,
+            },
+        )
+        await session.execute(stmt)
+        await session.commit()
 
 
 # ── Handlers ──────────────────────────────────────────────────────────────────
@@ -196,10 +234,18 @@ async def _ask_for_phone(message: Message, state: FSMContext) -> None:
 @router.message(F.contact, RequestFlow.sharing_phone)
 async def phone_shared(message: Message, state: FSMContext) -> None:
     contact: Contact = message.contact
+    if message.from_user and contact.user_id and contact.user_id != message.from_user.id:
+        await message.answer("⚠️ Iltimos, faqat o'zingizning raqamingizni ulashing.")
+        return
+
+    full_name = contact.first_name + (f" {contact.last_name}" if contact.last_name else "")
+    phone = _normalize_phone(contact.phone_number)
+
     await state.update_data(
-        customer_phone=contact.phone_number,
-        customer_name=contact.first_name + (f" {contact.last_name}" if contact.last_name else ""),
+        customer_phone=phone,
+        customer_name=full_name,
     )
+    await _upsert_customer_profile(message, state, full_name, phone)
     await show_confirmation(message, state)
 
 
@@ -212,10 +258,13 @@ async def phone_entered_manually(message: Message, state: FSMContext) -> None:
         await message.answer("⚠️ Noto'g'ri format. Masalan: +998901234567")
         return
 
+    full_name = message.from_user.first_name if message.from_user else "Noma'lum"
+
     await state.update_data(
         customer_phone=phone,
-        customer_name=message.from_user.first_name if message.from_user else "Noma'lum",
+        customer_name=full_name,
     )
+    await _upsert_customer_profile(message, state, full_name, phone)
     await show_confirmation(message, state)
 
 
@@ -279,7 +328,6 @@ async def confirm_request(callback: CallbackQuery, state: FSMContext, bot: Bot) 
         await session.refresh(request)
 
         # Run matching
-        from sqlalchemy.orm import selectinload
         from sqlalchemy import select as sa_select
         from models import Category as Cat
 

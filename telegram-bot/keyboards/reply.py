@@ -1,6 +1,6 @@
 """Reusable reply keyboards."""
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, WebAppInfo
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from config import settings
 
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
@@ -48,6 +48,3 @@ def urgency_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         one_time_keyboard=True,
     )
-
-def remove_keyboard() -> ReplyKeyboardRemove:
-    return ReplyKeyboardRemove()

@@ -6,41 +6,35 @@
 
 @layer base {
   :root {
-    --background: 222 46% 8%;
-    --foreground: 210 20% 96%;
+    --background: 215 38% 7%;
+    --foreground: 210 22% 96%;
 
-    --card: 222 36% 12%;
-    --card-foreground: 210 20% 96%;
+    --card: 216 33% 11%;
+    --card-foreground: 210 22% 96%;
 
-    --popover: 222 36% 12%;
-    --popover-foreground: 210 20% 96%;
+    --popover: 216 33% 11%;
+    --popover-foreground: 210 22% 96%;
 
-    --primary: 184 62% 61%;
-    --primary-foreground: 220 47% 10%;
+    --primary: 184 66% 61%;
+    --primary-foreground: 216 46% 9%;
 
-    --secondary: 220 24% 16%;
+    --secondary: 215 26% 16%;
     --secondary-foreground: 210 20% 96%;
 
-    --muted: 220 22% 18%;
-    --muted-foreground: 216 16% 72%;
+    --muted: 215 24% 18%;
+    --muted-foreground: 214 15% 73%;
 
-    --accent: 43 95% 61%;
-    --accent-foreground: 223 47% 12%;
+    --accent: 43 95% 62%;
+    --accent-foreground: 223 44% 12%;
 
-    --destructive: 0 78% 61%;
+    --destructive: 0 79% 61%;
     --destructive-foreground: 210 20% 96%;
 
-    --border: 214 18% 24%;
-    --input: 214 18% 24%;
-    --ring: 184 62% 61%;
+    --border: 214 22% 24%;
+    --input: 214 22% 24%;
+    --ring: 184 66% 61%;
 
-    --radius: 0.8rem;
-
-    --chart-1: 184 62% 61%;
-    --chart-2: 43 95% 61%;
-    --chart-3: 196 70% 56%;
-    --chart-4: 160 58% 45%;
-    --chart-5: 22 88% 62%;
+    --radius: 0.95rem;
   }
 
   * {
@@ -60,14 +54,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-image:
-      radial-gradient(80% 40% at 5% -10%, hsl(184 62% 61% / 0.22), transparent 58%),
-      radial-gradient(70% 34% at 96% 10%, hsl(43 95% 61% / 0.14), transparent 62%),
-      linear-gradient(180deg, #0b1019 0%, #070a11 100%);
+      radial-gradient(80% 45% at 4% -8%, hsl(184 66% 61% / 0.22), transparent 60%),
+      radial-gradient(70% 40% at 98% 5%, hsl(43 95% 62% / 0.16), transparent 64%),
+      linear-gradient(180deg, #0a0f18 0%, #070b12 100%);
     background-attachment: fixed;
   }
 
   html[data-ui-theme="minimal"] body {
-    background-image: linear-gradient(180deg, #0d121a 0%, #0b0f16 100%);
+    background-image: linear-gradient(180deg, #10151f 0%, #0b1118 100%);
   }
 
   h1,
@@ -97,11 +91,11 @@
 }
 
 html[data-ui-theme="minimal"] {
-  --background: 220 25% 10%;
+  --background: 220 24% 10%;
   --foreground: 210 20% 95%;
-  --card: 220 22% 12%;
+  --card: 220 22% 13%;
   --card-foreground: 210 20% 95%;
-  --popover: 220 22% 12%;
+  --popover: 220 22% 13%;
   --popover-foreground: 210 20% 95%;
   --primary: 190 45% 62%;
   --primary-foreground: 220 47% 10%;
@@ -115,11 +109,15 @@ html[data-ui-theme="minimal"] {
 
 @layer components {
   .surface-card {
-    @apply rounded-2xl border border-white/10 bg-white/[0.045] shadow-[0_10px_30px_rgba(0,0,0,0.26)] backdrop-blur;
+    @apply rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,26,39,0.92)_0%,rgba(11,18,28,0.92)_100%)] shadow-[0_12px_36px_rgba(0,0,0,0.32)] backdrop-blur;
+  }
+
+  .surface-card-soft {
+    @apply rounded-2xl border border-white/10 bg-white/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur;
   }
 
   .heading-gradient {
-    @apply bg-[linear-gradient(110deg,#eaf7ff_0%,#c4eef2_45%,#f5d989_100%)] bg-clip-text text-transparent;
+    @apply bg-[linear-gradient(108deg,#ecf8ff_0%,#afeaf1_46%,#f4d37c_100%)] bg-clip-text text-transparent;
   }
 
   .chip {
@@ -127,11 +125,19 @@ html[data-ui-theme="minimal"] {
   }
 
   .action-primary {
-    @apply rounded-xl bg-[linear-gradient(180deg,#67d6dc_0%,#4caebf_100%)] px-4 py-2.5 font-bold text-[#07131b] shadow-[0_8px_20px_rgba(102,212,219,0.3)] transition hover:brightness-105;
+    @apply rounded-2xl bg-[linear-gradient(180deg,#73e2ea_0%,#4eb6c7_100%)] px-4 py-2.5 font-bold text-[#07131b] shadow-[0_10px_24px_rgba(80,197,212,0.34)] transition hover:brightness-105 active:translate-y-[1px];
   }
 
   .action-amber {
-    @apply rounded-xl bg-[linear-gradient(180deg,#f3cc63_0%,#d8ab3d_100%)] px-4 py-2.5 font-bold text-[#15120a] shadow-[0_8px_20px_rgba(214,163,60,0.28)] transition hover:brightness-105;
+    @apply rounded-2xl bg-[linear-gradient(180deg,#f5d06f_0%,#dfb24a_100%)] px-4 py-2.5 font-bold text-[#171309] shadow-[0_10px_24px_rgba(214,166,63,0.28)] transition hover:brightness-105 active:translate-y-[1px];
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-1 text-[11px] font-bold;
+  }
+
+  .section-title {
+    @apply text-lg font-extrabold text-slate-100;
   }
 }
 
@@ -169,5 +175,36 @@ html[data-ui-theme="minimal"] {
 
   .pt-safe {
     padding-top: env(safe-area-inset-top);
+  }
+
+  .fade-up {
+    animation: fade-up 0.5s ease both;
+  }
+
+  .stagger-1 {
+    animation-delay: 0.06s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.12s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.18s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.24s;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -17,8 +17,8 @@ export function MiniBottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-white/10 bg-[#090e15]/92 backdrop-blur-xl pb-safe">
-      <ul className="grid grid-cols-5 px-1 py-1.5">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-white/10 bg-[linear-gradient(180deg,rgba(8,13,20,0.9)_0%,rgba(8,13,20,0.97)_100%)] backdrop-blur-xl pb-safe">
+      <ul className="grid grid-cols-5 px-1.5 py-2">
         {navItems.map((item) => {
           const active = pathname === item.href
           const Icon = item.icon
@@ -27,13 +27,13 @@ export function MiniBottomNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "mx-0.5 flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-semibold transition-all",
+                  "mx-0.5 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all",
                   active
-                    ? "bg-white/10 text-[#87e7eb] shadow-[inset_0_0_0_1px_rgba(134,230,235,0.35)]"
+                    ? "bg-white/12 text-[#8de7ec] shadow-[inset_0_0_0_1px_rgba(141,231,236,0.38)]"
                     : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
                 )}
               >
-                <Icon className={cn("h-4 w-4", active && "drop-shadow-[0_0_8px_rgba(112,232,238,0.6)]")} />
+                <Icon className={cn("h-4 w-4", active && "drop-shadow-[0_0_8px_rgba(124,230,236,0.62)]")} />
                 <span>{item.label}</span>
               </Link>
             </li>

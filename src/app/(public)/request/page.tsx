@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Loader2, MapPin, Plus } from "lucide-react"
+import { ArrowLeft, Loader2, MapPin, Plus, TriangleAlert } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
@@ -27,12 +27,12 @@ interface Profile {
 
 const URGENCY_OPTIONS = [
   { value: "LOW", label: "Oddiy" },
-  { value: "MEDIUM", label: "O'rta" },
+  { value: "MEDIUM", label: "Orta" },
   { value: "HIGH", label: "Muhim" },
   { value: "URGENT", label: "Tezda" },
 ]
 
-const CITIES = ["Toshkent", "Samarqand", "Buxoro", "Namangan", "Andijon", "Farg'ona", "Qarshi", "Nukus"]
+const CITIES = ["Toshkent", "Samarqand", "Buxoro", "Namangan", "Andijon", "Fargona", "Qarshi", "Nukus"]
 
 function RequestPageInner() {
   const router = useRouter()
@@ -106,7 +106,7 @@ function RequestPageInner() {
       toast({
         variant: "destructive",
         title: "Yuborishda xatolik",
-        description: err instanceof Error ? err.message : "Qayta urinib ko'ring",
+        description: err instanceof Error ? err.message : "Qayta urinib koring",
       })
     } finally {
       setLoading(false)
@@ -115,67 +115,101 @@ function RequestPageInner() {
 
   return (
     <div className="min-h-screen px-3 pb-4 pt-safe text-slate-100">
-      <header className="surface-card mb-3 px-3 py-3">
+      <header className="surface-card fade-up mb-3 px-3 py-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => router.push("/")} className="rounded-lg border border-white/10 p-1.5 text-slate-300 hover:bg-white/10">
-            <ArrowLeft className="h-5 w-5" />
+          <button onClick={() => router.push("/")} className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 hover:bg-white/10">
+            <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="text-lg">Buyurtma yuborish</h1>
+          <div>
+            <h1 className="text-lg">Buyurtma yuborish</h1>
+            <p className="text-xs text-slate-400">Muammoni aniq yozing, tezroq usta topiladi</p>
+          </div>
         </div>
       </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="surface-card space-y-3 p-3.5">
-        <div>
-          <Label className="mb-1.5 block text-xs font-bold text-slate-400">Muammo</Label>
-          <Input className="h-11 rounded-xl border-white/10 bg-[#101826]" placeholder="Masalan: Rakovina suv oqmoqda" {...register("title")} />
-          {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="surface-card fade-up stagger-1 space-y-3 p-3.5">
+        <div className="surface-card-soft rounded-2xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">1-qadam</p>
+          <p className="mt-0.5 text-sm font-bold text-slate-100">Muammo ma'lumoti</p>
 
-        <div>
-          <Label className="mb-1.5 block text-xs font-bold text-slate-400">Tavsif</Label>
-          <Textarea className="min-h-[95px] rounded-xl border-white/10 bg-[#101826]" placeholder="Muammoni batafsil yozing..." {...register("description")} />
-          {errors.description && <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>}
-        </div>
+          <div className="mt-3 space-y-3">
+            <div>
+              <Label className="mb-1.5 block text-xs font-bold text-slate-400">Muammo</Label>
+              <Input className="h-11 rounded-xl border-white/10 bg-[#101826]" placeholder="Masalan: Rakovina suv oqmoqda" {...register("title")} />
+              {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
+            </div>
 
-        <div>
-          <Label className="mb-1.5 block text-xs font-bold text-slate-400">Manzil</Label>
-          <div className="relative">
-            <Input className="h-11 rounded-xl border-white/10 bg-[#101826] pr-10" placeholder="Ko'cha, uy, mo'ljal" {...register("address")} />
-            <MapPin className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <div>
+              <Label className="mb-1.5 block text-xs font-bold text-slate-400">Tavsif</Label>
+              <Textarea className="min-h-[95px] rounded-xl border-white/10 bg-[#101826]" placeholder="Muammoni batafsil yozing..." {...register("description")} />
+              {errors.description && <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>}
+            </div>
           </div>
-          {errors.address && <p className="mt-1 text-xs text-red-400">{errors.address.message}</p>}
         </div>
 
-        <div>
-          <Label className="mb-1.5 block text-xs font-bold text-slate-400">Shahar</Label>
-          <Select defaultValue="Toshkent" onValueChange={(v) => setValue("city", v)}>
-            <SelectTrigger className="h-11 rounded-xl border-white/10 bg-[#101826]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CITIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="surface-card-soft rounded-2xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">2-qadam</p>
+          <p className="mt-0.5 text-sm font-bold text-slate-100">Lokatsiya va shoshilinchlik</p>
+
+          <div className="mt-3 space-y-3">
+            <div>
+              <Label className="mb-1.5 block text-xs font-bold text-slate-400">Manzil</Label>
+              <div className="relative">
+                <Input className="h-11 rounded-xl border-white/10 bg-[#101826] pr-10" placeholder="Kocha, uy, moljal" {...register("address")} />
+                <MapPin className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              </div>
+              {errors.address && <p className="mt-1 text-xs text-red-400">{errors.address.message}</p>}
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block text-xs font-bold text-slate-400">Shahar</Label>
+              <Select defaultValue="Toshkent" onValueChange={(v) => setValue("city", v)}>
+                <SelectTrigger className="h-11 rounded-xl border-white/10 bg-[#101826]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CITIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block text-xs font-bold text-slate-400">Shoshilinchlik</Label>
+              <Select defaultValue="URGENT" onValueChange={(v) => setValue("urgency", v as ServiceRequestInput["urgency"])}>
+                <SelectTrigger className="h-11 rounded-xl border-white/10 bg-[#101826]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {URGENCY_OPTIONS.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {u.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <Label className="mb-1.5 block text-xs font-bold text-slate-400">Shoshilinchlik</Label>
-          <Select defaultValue="URGENT" onValueChange={(v) => setValue("urgency", v as ServiceRequestInput["urgency"])}>
-            <SelectTrigger className="h-11 rounded-xl border-white/10 bg-[#101826]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {URGENCY_OPTIONS.map((u) => (
-                <SelectItem key={u.value} value={u.value}>
-                  {u.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="surface-card-soft rounded-2xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">3-qadam</p>
+          <p className="mt-0.5 text-sm font-bold text-slate-100">Aloqa ma'lumoti</p>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Input className="h-10 rounded-xl border-white/10 bg-[#0f1623]" placeholder="Ismingiz" {...register("customerName")} />
+            <Input className="h-10 rounded-xl border-white/10 bg-[#0f1623]" placeholder="+998..." {...register("customerPhone")} />
+          </div>
+
+          {!profile?.phone && (
+            <p className="mt-2 inline-flex items-center gap-1 text-xs text-amber-300">
+              <TriangleAlert className="h-3.5 w-3.5" />
+              Telefon raqamini <a className="font-bold underline" href="/account">Account</a> bo'limida saqlang.
+            </p>
+          )}
         </div>
 
         <div className="rounded-xl border border-dashed border-white/20 bg-[#101826] p-4">
@@ -185,19 +219,6 @@ function RequestPageInner() {
           >
             <Plus className="h-7 w-7" />
           </button>
-        </div>
-
-        <div className="rounded-xl border border-white/10 bg-[#101826] p-2.5">
-          <p className="text-xs font-bold text-slate-400">Aloqa ma'lumoti</p>
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            <Input className="h-10 rounded-xl border-white/10 bg-[#0f1623]" placeholder="Ismingiz" {...register("customerName")} />
-            <Input className="h-10 rounded-xl border-white/10 bg-[#0f1623]" placeholder="+998..." {...register("customerPhone")} />
-          </div>
-          {!profile?.phone && (
-            <p className="mt-1 text-xs text-amber-300">
-              Telefon raqamingizni <a className="font-bold underline" href="/account">Account</a> bo'limida saqlang.
-            </p>
-          )}
         </div>
 
         <button type="submit" disabled={loading} className="action-amber mt-2 flex h-12 w-full items-center justify-center text-base disabled:opacity-70">

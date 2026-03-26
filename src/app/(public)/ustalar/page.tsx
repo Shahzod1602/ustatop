@@ -1,8 +1,6 @@
 import Link from "next/link"
-import { ArrowLeft, Star, CheckCircle2, MapPin, Filter } from "lucide-react"
+import { ArrowLeft, Star, CheckCircle2, MapPin, Filter, Phone, Eye } from "lucide-react"
 import { prisma } from "@/lib/prisma"
-
-export const dynamic = "force-dynamic"
 
 type Params = Promise<{
   requestId?: string
@@ -12,6 +10,8 @@ type Params = Promise<{
   sort?: string
   q?: string
 }>
+
+export const dynamic = "force-dynamic"
 
 function initials(fullName: string) {
   return fullName
@@ -96,16 +96,19 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
 
   return (
     <div className="min-h-screen px-3 pb-4 pt-safe text-slate-100">
-      <header className="surface-card mb-3 px-3 py-3">
+      <header className="surface-card fade-up mb-3 px-3 py-3">
         <div className="flex items-center gap-2">
-          <Link href="/" className="rounded-lg border border-white/10 p-1.5 text-slate-300 hover:bg-white/10">
-            <ArrowLeft className="h-5 w-5" />
+          <Link href="/" className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 hover:bg-white/10">
+            <ArrowLeft className="h-4 w-4" />
           </Link>
-          <h1 className="text-lg">Ustalar</h1>
+          <div>
+            <h1 className="text-lg">Ustalar ro'yxati</h1>
+            <p className="text-xs text-slate-400">Mos ustani reyting va tajriba bo'yicha tanlang</p>
+          </div>
         </div>
       </header>
 
-      <div className="surface-card mb-3 p-3.5">
+      <div className="surface-card fade-up stagger-1 mb-3 p-3.5">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-base font-extrabold text-slate-100">{masters.length} ta natija</p>
           <span className="chip">
@@ -114,7 +117,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           </span>
         </div>
 
-        <form className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <form className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <input
             name="q"
             defaultValue={q ?? ""}
@@ -124,80 +127,88 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           <input
             name="city"
             defaultValue={city ?? ""}
-            placeholder="Shahar / lokatsiya..."
+            placeholder="Shahar..."
             className="h-10 rounded-xl border border-white/10 bg-[#111928] px-3 text-sm text-slate-100 outline-none focus:border-[#89e8ed]"
           />
           <button className="action-primary h-10 px-3 py-0 text-sm">Qidirish</button>
         </form>
 
-        <div className="mb-1 grid grid-cols-3 gap-2 text-xs font-bold">
+        <div className="grid grid-cols-3 gap-2 text-xs font-bold">
           <Link
             href={`/ustalar${requestId ? `?requestId=${requestId}` : ""}`}
-            className={`rounded-lg border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
+            className={`rounded-xl border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
           >
             Barchasi
           </Link>
           <Link
             href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`}
-            className={`rounded-lg border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
+            className={`rounded-xl border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
           >
             Reyting 4.5+
           </Link>
           <Link
             href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`}
-            className={`rounded-lg border px-2 py-2 text-center ${sort === "new" ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
+            className={`rounded-xl border px-2 py-2 text-center ${sort === "new" ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
           >
             Yangi
           </Link>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 fade-up stagger-2">
         {masters.map((m) => (
-          <div key={m.id} className="surface-card p-2.5">
+          <article key={m.id} className="surface-card p-3">
             <div className="flex items-start gap-3">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[#16344c] text-lg font-bold text-[#8ce7eb]">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#16344c] text-lg font-bold text-[#8ce7eb]">
                 {m.profilePhoto ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-xl object-cover" />
+                  <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-2xl object-cover" />
                 ) : (
                   initials(m.fullName)
                 )}
               </div>
+
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[17px] font-extrabold text-slate-100">{m.fullName}</p>
-                <div className="my-0.5 flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < Math.round(m.rating) ? "fill-[#f6b627] text-[#f6b627]" : "text-slate-300"}`} />
-                  ))}
-                  <span className="ml-1 text-sm font-bold text-slate-200">{m.rating.toFixed(1)}</span>
+                <div className="mb-1 flex items-start justify-between gap-2">
+                  <p className="truncate text-[17px] font-extrabold text-slate-100">{m.fullName}</p>
+                  {m.isVerified && (
+                    <span className="status-pill border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Verified
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm font-semibold text-slate-400">
+
+                <div className="mb-1 flex items-center gap-1.5">
+                  <Star className="h-4 w-4 fill-[#f6b627] text-[#f6b627]" />
+                  <span className="text-sm font-bold text-slate-100">{m.rating.toFixed(1)}</span>
+                  <span className="text-xs text-slate-500">({m.reviewCount} sharh)</span>
+                </div>
+
+                <p className="text-sm font-semibold text-slate-300">
                   {Math.max(1, Math.round(m.reviewCount / 6))} yil tajriba · {extractPrice(m.bio)}
                 </p>
-                <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>{m.isVerified ? "Tekshiruvdan o'tgan" : "Tezkor aloqa"}</span>
-                </div>
+
                 <div className="mt-1 flex items-center gap-1 text-xs font-medium text-slate-500">
                   <MapPin className="h-3.5 w-3.5" />
                   {m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}
                 </div>
-                <p className="mt-1 text-xs font-medium text-slate-500">Postlar: {m._count.posts}</p>
-              </div>
-              <div className="self-center space-y-1">
-                <a href={`tel:${m.phone}`} className="action-amber block px-4 py-2 text-center text-sm">
-                  Qo'ng'iroq
-                </a>
-                <Link
-                  href={`/usta/${m.id}`}
-                  className="block rounded-lg border border-[#89e8ed]/35 px-3 py-1.5 text-center text-xs font-bold text-[#89e8ed]"
-                >
-                  Profil
-                </Link>
+
+                <p className="mt-1 text-xs text-slate-500">Ish postlari: {m._count.posts}</p>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <a href={`tel:${m.phone}`} className="action-amber inline-flex h-10 items-center justify-center gap-1 text-sm">
+                    <Phone className="h-4 w-4" />
+                    Qo'ng'iroq
+                  </a>
+                  <Link href={`/usta/${m.id}`} className="action-primary inline-flex h-10 items-center justify-center gap-1 text-sm">
+                    <Eye className="h-4 w-4" />
+                    Profil
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>

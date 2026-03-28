@@ -17,23 +17,24 @@ export function MiniBottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-white/10 bg-[linear-gradient(180deg,rgba(8,13,20,0.9)_0%,rgba(8,13,20,0.97)_100%)] backdrop-blur-xl pb-safe">
-      <ul className="grid grid-cols-5 px-1.5 pt-2 pb-1">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-[#e9e9e9] bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pb-safe">
+      <ul className="grid grid-cols-5 px-1 pt-1 pb-1">
         {navItems.map((item) => {
           const active = pathname === item.href
           const Icon = item.icon
           return (
-            <li key={item.href}>
+            <li key={item.href} className="relative">
+              {active && (
+                <span className="absolute left-1/2 top-0 h-0.5 w-8 -translate-x-1/2 rounded-full bg-[#ff6b2b]" />
+              )}
               <Link
                 href={item.href}
                 className={cn(
-                  "mx-0.5 flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all",
-                  active
-                    ? "bg-white/12 text-[#8de7ec] shadow-[inset_0_0_0_1px_rgba(141,231,236,0.38)]"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                  "flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all",
+                  active ? "text-[#ff6b2b]" : "text-[#8c8c8c] hover:text-[#3a3a3a]"
                 )}
               >
-                <Icon className={cn("h-4 w-4", active && "drop-shadow-[0_0_8px_rgba(124,230,236,0.62)]")} />
+                <Icon className="h-5 w-5" />
                 <span>{item.label}</span>
               </Link>
             </li>

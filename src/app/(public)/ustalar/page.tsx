@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, Star, CheckCircle2, MapPin, Filter, Phone, Eye, Users } from "lucide-react"
+import { ArrowLeft, Star, CheckCircle2, MapPin, Phone, Eye, Users } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 type Params = Promise<{
@@ -14,12 +14,12 @@ type Params = Promise<{
 export const dynamic = "force-dynamic"
 
 const AVATAR_PALETTES = [
-  { bg: "#143549", text: "#8de7ec" },
-  { bg: "#1a3020", text: "#86efac" },
-  { bg: "#2d1818", text: "#fca5a5" },
-  { bg: "#1e1835", text: "#c4b5fd" },
-  { bg: "#2a1e08", text: "#fcd34d" },
-  { bg: "#0f2a3a", text: "#93c5fd" },
+  { bg: "#e8f4fd", text: "#1a6fa8" },
+  { bg: "#e8f7ee", text: "#1a7a3f" },
+  { bg: "#fde8e8", text: "#b01c1c" },
+  { bg: "#f0e8fd", text: "#6b1aa8" },
+  { bg: "#fdf4e8", text: "#a86b1a" },
+  { bg: "#e8f0fd", text: "#1a3fa8" },
 ]
 
 function avatarPalette(name: string) {
@@ -116,26 +116,26 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
   }
 
   return (
-    <div className="min-h-screen px-3 pb-4 pt-safe text-slate-100">
-      <header className="surface-card fade-up mb-3 px-3 py-3">
+    <div className="min-h-screen bg-[#f5f5f5] pb-4 text-[#3a3a3a]">
+      <header className="bg-[#ff6b2b] px-3 pt-safe pb-3">
         <div className="flex items-center gap-2">
-          <Link href="/" className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 hover:bg-white/10">
+          <Link href="/" className="rounded-xl bg-white/20 p-2 text-white hover:bg-white/30">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-lg">Ustalar ro'yxati</h1>
-            <p className="text-xs text-slate-400">Mos ustani reyting va tajriba bo'yicha tanlang</p>
+            <h1 className="text-lg font-bold text-white">Ustalar ro'yxati</h1>
+            <p className="text-xs text-white/70">Mos ustani reyting va tajriba bo'yicha tanlang</p>
           </div>
         </div>
       </header>
 
-      <div className="surface-card fade-up stagger-1 mb-3 p-3.5">
+      {/* Search & Filter */}
+      <div className="surface-card fade-up mx-3 mb-3 mt-3 p-3.5">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-base font-extrabold text-slate-100">
-            <span className="text-[#89e8ed]">{masters.length}</span> ta usta topildi
+          <p className="text-base font-extrabold text-[#3a3a3a]">
+            <span className="text-[#ff6b2b]">{masters.length}</span> ta usta topildi
           </p>
           <Link href="/ustalar" className="chip">
-            <Filter className="mr-1 h-3 w-3" />
             Tozalash
           </Link>
         </div>
@@ -145,13 +145,13 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
             name="q"
             defaultValue={q ?? ""}
             placeholder="Usta nomi..."
-            className="h-10 rounded-xl border border-white/10 bg-[#111928] px-3 text-sm text-slate-100 outline-none focus:border-[#89e8ed]"
+            className="h-10 rounded-xl border border-[#e9e9e9] bg-white px-3 text-sm text-[#3a3a3a] outline-none focus:border-[#ff6b2b]"
           />
           <input
             name="city"
             defaultValue={city ?? ""}
             placeholder="Shahar..."
-            className="h-10 rounded-xl border border-white/10 bg-[#111928] px-3 text-sm text-slate-100 outline-none focus:border-[#89e8ed]"
+            className="h-10 rounded-xl border border-[#e9e9e9] bg-white px-3 text-sm text-[#3a3a3a] outline-none focus:border-[#ff6b2b]"
           />
           <button className="action-primary h-10 px-3 py-0 text-sm">Qidirish</button>
         </form>
@@ -159,96 +159,98 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
         <div className="grid grid-cols-3 gap-2 text-xs font-bold">
           <Link
             href={`/ustalar${requestId ? `?requestId=${requestId}` : ""}`}
-            className={`rounded-xl border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
+            className={`rounded-xl border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b]" : "border-[#e9e9e9] bg-white text-[#8c8c8c]"}`}
           >
             Barchasi
           </Link>
           <Link
             href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`}
-            className={`rounded-xl border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
+            className={`rounded-xl border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b]" : "border-[#e9e9e9] bg-white text-[#8c8c8c]"}`}
           >
             Reyting 4.5+
           </Link>
           <Link
             href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`}
-            className={`rounded-xl border px-2 py-2 text-center ${sort === "new" ? "border-[#89e8ed]/40 bg-[#123245] text-[#8ce7eb]" : "border-white/10 bg-[#111928] text-slate-400"}`}
+            className={`rounded-xl border px-2 py-2 text-center ${sort === "new" ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b]" : "border-[#e9e9e9] bg-white text-[#8c8c8c]"}`}
           >
             Yangi
           </Link>
         </div>
       </div>
 
-      <div className="space-y-3 fade-up stagger-2">
+      {/* Masters List */}
+      <div className="space-y-2.5 fade-up stagger-1 px-3">
         {masters.length === 0 && (
           <div className="surface-card p-6 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-slate-600" />
-            <p className="text-sm font-bold text-slate-300">Usta topilmadi</p>
-            <p className="mt-1 text-xs text-slate-500">Filtrni o'zgartirib ko'ring</p>
+            <Users className="mx-auto mb-3 h-8 w-8 text-[#c0c0c0]" />
+            <p className="text-sm font-bold text-[#3a3a3a]">Usta topilmadi</p>
+            <p className="mt-1 text-xs text-[#8c8c8c]">Filtrni o'zgartirib ko'ring</p>
             <Link href="/ustalar" className="action-primary mt-4 inline-flex text-sm">
               Barcha ustalar
             </Link>
           </div>
         )}
+
         {masters.map((m) => {
           const palette = avatarPalette(m.fullName)
           return (
-          <article key={m.id} className="surface-card p-3">
-            <div className="flex items-start gap-3">
-              <div
-                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
-                style={{ background: palette.bg, color: palette.text }}
-              >
-                {m.profilePhoto ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-2xl object-cover" />
-                ) : (
-                  initials(m.fullName)
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-start justify-between gap-2">
-                  <p className="truncate text-[17px] font-extrabold text-slate-100">{m.fullName}</p>
-                  {m.isVerified && (
-                    <span className="status-pill border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Tasdiqlangan
-                    </span>
+            <article key={m.id} className="surface-card p-3">
+              <div className="flex items-start gap-3">
+                <div
+                  className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
+                  style={{ background: palette.bg, color: palette.text }}
+                >
+                  {m.profilePhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-2xl object-cover" />
+                  ) : (
+                    initials(m.fullName)
                   )}
                 </div>
 
-                <div className="mb-1 flex items-center gap-1.5">
-                  <Star className="h-4 w-4 fill-[#f6b627] text-[#f6b627]" />
-                  <span className="text-sm font-bold text-slate-100">{m.rating.toFixed(1)}</span>
-                  <span className="text-xs text-slate-500">({m.reviewCount} sharh)</span>
-                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <p className="truncate text-[17px] font-extrabold text-[#3a3a3a]">{m.fullName}</p>
+                    {m.isVerified && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Tasdiqlangan
+                      </span>
+                    )}
+                  </div>
 
-                <p className="text-sm font-semibold text-slate-300">
-                  {yearsActive(m.createdAt)} · {extractPrice(m.bio)}
-                </p>
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <Star className="h-4 w-4 fill-[#f59e0b] text-[#f59e0b]" />
+                    <span className="text-sm font-bold text-[#3a3a3a]">{m.rating.toFixed(1)}</span>
+                    <span className="text-xs text-[#8c8c8c]">({m.reviewCount} sharh)</span>
+                  </div>
 
-                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-slate-500">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}
-                </div>
+                  <p className="text-sm font-semibold text-[#5a5a5a]">
+                    {yearsActive(m.createdAt)} · {extractPrice(m.bio)}
+                  </p>
 
-                {m._count.posts > 0 && (
-                  <p className="mt-1 text-xs text-slate-500">{m._count.posts} ta ish namunasi</p>
-                )}
+                  <div className="mt-1 flex items-center gap-1 text-xs font-medium text-[#8c8c8c]">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}
+                  </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <a href={`tel:${m.phone}`} className="action-amber inline-flex h-10 items-center justify-center gap-1 text-sm">
-                    <Phone className="h-4 w-4" />
-                    Qo'ng'iroq
-                  </a>
-                  <Link href={`/usta/${m.id}`} className="action-primary inline-flex h-10 items-center justify-center gap-1 text-sm">
-                    <Eye className="h-4 w-4" />
-                    Profil
-                  </Link>
+                  {m._count.posts > 0 && (
+                    <p className="mt-1 text-xs text-[#8c8c8c]">{m._count.posts} ta ish namunasi</p>
+                  )}
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <a href={`tel:${m.phone}`} className="action-amber inline-flex h-10 items-center justify-center gap-1 text-sm">
+                      <Phone className="h-4 w-4" />
+                      Qo'ng'iroq
+                    </a>
+                    <Link href={`/usta/${m.id}`} className="action-primary inline-flex h-10 items-center justify-center gap-1 text-sm">
+                      <Eye className="h-4 w-4" />
+                      Profil
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
+            </article>
           )
         })}
       </div>

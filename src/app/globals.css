@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,35 +6,35 @@
 
 @layer base {
   :root {
-    --background: 215 38% 7%;
-    --foreground: 210 22% 96%;
+    --background: 0 0% 96%;
+    --foreground: 0 0% 23%;
 
-    --card: 216 33% 11%;
-    --card-foreground: 210 22% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 23%;
 
-    --popover: 216 33% 11%;
-    --popover-foreground: 210 22% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 23%;
 
-    --primary: 184 66% 61%;
-    --primary-foreground: 216 46% 9%;
+    --primary: 18 100% 58%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 26% 16%;
-    --secondary-foreground: 210 20% 96%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 23%;
 
-    --muted: 215 24% 18%;
-    --muted-foreground: 214 15% 73%;
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 43 95% 62%;
-    --accent-foreground: 223 44% 12%;
+    --accent: 18 100% 58%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 79% 61%;
-    --destructive-foreground: 210 20% 96%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 22% 24%;
-    --input: 214 22% 24%;
-    --ring: 184 66% 61%;
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: 18 100% 58%;
 
-    --radius: 0.95rem;
+    --radius: 0.75rem;
   }
 
   * {
@@ -53,24 +53,11 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-image:
-      radial-gradient(80% 45% at 4% -8%, hsl(184 66% 61% / 0.22), transparent 60%),
-      radial-gradient(70% 40% at 98% 5%, hsl(43 95% 62% / 0.16), transparent 64%),
-      linear-gradient(180deg, #0a0f18 0%, #070b12 100%);
-    background-attachment: fixed;
+    background-color: #f5f5f5;
   }
 
-  html[data-ui-theme="minimal"] body {
-    background-image: linear-gradient(180deg, #10151f 0%, #0b1118 100%);
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: "Space Grotesk", "Manrope", sans-serif;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Manrope", "Segoe UI", sans-serif;
     @apply font-bold tracking-tight;
   }
 
@@ -78,66 +65,46 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
-  img,
-  video {
+  img, video {
     @apply max-w-full h-auto;
   }
 
-  input,
-  textarea,
-  select {
+  input, textarea, select {
     @apply bg-background;
   }
 }
 
-html[data-ui-theme="minimal"] {
-  --background: 220 24% 10%;
-  --foreground: 210 20% 95%;
-  --card: 220 22% 13%;
-  --card-foreground: 210 20% 95%;
-  --popover: 220 22% 13%;
-  --popover-foreground: 210 20% 95%;
-  --primary: 190 45% 62%;
-  --primary-foreground: 220 47% 10%;
-  --secondary: 220 16% 17%;
-  --secondary-foreground: 210 20% 95%;
-  --muted: 220 15% 18%;
-  --muted-foreground: 216 12% 72%;
-  --accent: 190 45% 62%;
-  --accent-foreground: 220 47% 10%;
-}
-
 @layer components {
   .surface-card {
-    @apply rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(17,26,39,0.92)_0%,rgba(11,18,28,0.92)_100%)] shadow-[0_12px_36px_rgba(0,0,0,0.32)] backdrop-blur;
+    @apply rounded-2xl border border-[#e9e9e9] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)];
   }
 
   .surface-card-soft {
-    @apply rounded-2xl border border-white/10 bg-white/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur;
+    @apply rounded-xl border border-[#e9e9e9] bg-[#f7f7f7];
   }
 
   .heading-gradient {
-    @apply bg-[linear-gradient(108deg,#ecf8ff_0%,#afeaf1_46%,#f4d37c_100%)] bg-clip-text text-transparent;
+    @apply text-[#ff6b2b];
   }
 
   .chip {
-    @apply inline-flex items-center rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200;
+    @apply inline-flex items-center rounded-full border border-[#e9e9e9] bg-[#f0f0f0] px-2.5 py-1 text-xs font-semibold text-[#3a3a3a];
   }
 
   .action-primary {
-    @apply rounded-2xl bg-[linear-gradient(180deg,#73e2ea_0%,#4eb6c7_100%)] px-4 py-2.5 font-bold text-[#07131b] shadow-[0_10px_24px_rgba(80,197,212,0.34)] transition hover:brightness-105 active:translate-y-[1px];
+    @apply rounded-xl bg-[#ff6b2b] px-4 py-2.5 font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20] active:translate-y-[1px];
   }
 
   .action-amber {
-    @apply rounded-2xl bg-[linear-gradient(180deg,#f5d06f_0%,#dfb24a_100%)] px-4 py-2.5 font-bold text-[#171309] shadow-[0_10px_24px_rgba(214,166,63,0.28)] transition hover:brightness-105 active:translate-y-[1px];
+    @apply rounded-xl border border-[#ff6b2b] bg-white px-4 py-2.5 font-bold text-[#ff6b2b] transition hover:bg-orange-50 active:translate-y-[1px];
   }
 
   .status-pill {
-    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-1 text-[11px] font-bold;
+    @apply inline-flex items-center gap-1 rounded-full border bg-white px-2 py-1 text-[11px] font-bold;
   }
 
   .section-title {
-    @apply text-lg font-extrabold text-slate-100;
+    @apply text-lg font-extrabold text-[#3a3a3a];
   }
 }
 
@@ -178,30 +145,19 @@ html[data-ui-theme="minimal"] {
   }
 
   .fade-up {
-    animation: fade-up 0.5s ease both;
+    animation: fade-up 0.4s ease both;
   }
 
-  .stagger-1 {
-    animation-delay: 0.06s;
-  }
-
-  .stagger-2 {
-    animation-delay: 0.12s;
-  }
-
-  .stagger-3 {
-    animation-delay: 0.18s;
-  }
-
-  .stagger-4 {
-    animation-delay: 0.24s;
-  }
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.10s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.20s; }
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;

@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Search, Star, ChevronRight, UserCircle2, Sparkles, ShieldCheck, Clock3, CheckCircle2 } from "lucide-react"
 import { prisma } from "@/lib/prisma"
-import { ThemeVariantToggle } from "@/components/shared/theme-variant-toggle"
 
 export const dynamic = "force-dynamic"
 
@@ -32,12 +31,12 @@ async function getData() {
 }
 
 const AVATAR_PALETTES = [
-  { bg: "#143549", text: "#8de7ec" },
-  { bg: "#1a3020", text: "#86efac" },
-  { bg: "#2d1818", text: "#fca5a5" },
-  { bg: "#1e1835", text: "#c4b5fd" },
-  { bg: "#2a1e08", text: "#fcd34d" },
-  { bg: "#0f2a3a", text: "#93c5fd" },
+  { bg: "#e8f4fd", text: "#1a6fa8" },
+  { bg: "#e8f7ee", text: "#1a7a3f" },
+  { bg: "#fde8e8", text: "#b01c1c" },
+  { bg: "#f0e8fd", text: "#6b1aa8" },
+  { bg: "#fdf4e8", text: "#a86b1a" },
+  { bg: "#e8f0fd", text: "#1a3fa8" },
 ]
 
 function avatarPalette(name: string) {
@@ -58,50 +57,54 @@ export default async function HomePage() {
   const { categories, masters } = await getData()
 
   return (
-    <div className="min-h-screen px-3 pb-4 pt-safe text-slate-100">
-      <header className="surface-card fade-up mb-3 px-4 pb-4 pt-4">
-        <div className="mb-4 flex items-start justify-between gap-3">
+    <div className="min-h-screen bg-[#f5f5f5] pb-4 text-[#3a3a3a]">
+
+      {/* Orange Header */}
+      <header className="bg-[#ff6b2b] px-4 pt-safe pb-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(145deg,#89edf1_0%,#58bac8_100%)] text-base font-black text-[#08131b]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-base font-black text-white">
               U
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Uy xizmati</p>
-              <p className="text-[28px] leading-none heading-gradient">UstaTop</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">Uy xizmati</p>
+              <p className="text-[22px] font-extrabold leading-none text-white">UstaTop</p>
             </div>
-          </div>
-          <ThemeVariantToggle />
-        </div>
-
-        <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
-          <span className="chip justify-center">
-            <Sparkles className="mr-1 h-3 w-3" /> 24/7 so'rov
-          </span>
-          <span className="chip justify-center">
-            <ShieldCheck className="mr-1 h-3 w-3" /> Tekshirilgan ustalar
-          </span>
-        </div>
-
-        <Link href="/categories" className="surface-card-soft block rounded-2xl px-3 py-2.5 text-slate-300 transition hover:border-[#89e8ed]/30">
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 shrink-0" />
-            <span className="text-sm font-semibold">Santexnik, elektrik yoki boshqa xizmatni tanlang</span>
-          </div>
-        </Link>
-      </header>
-
-      <section className="surface-card fade-up stagger-1 mb-3 p-3.5">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[30px] font-extrabold leading-none heading-gradient">Xizmat toping</p>
-            <p className="mt-1 text-sm font-semibold text-slate-400">Bir necha qadamda muammoni yuboring.</p>
           </div>
           <Link
             href="/account"
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3 text-xs font-semibold text-slate-200"
+            className="flex h-9 items-center gap-1.5 rounded-full bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
           >
             <UserCircle2 className="h-4 w-4" />
             Account
+          </Link>
+        </div>
+
+        <div className="mb-3 flex gap-4 text-xs text-white/80">
+          <span className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3" /> 24/7 so'rov
+          </span>
+          <span className="flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3" /> Tekshirilgan ustalar
+          </span>
+        </div>
+
+        {/* Search bar */}
+        <Link href="/categories" className="flex h-11 items-center gap-2 rounded-xl bg-white px-3 shadow-sm">
+          <Search className="h-4 w-4 shrink-0 text-[#8c8c8c]" />
+          <span className="text-sm text-[#8c8c8c]">Santexnik, elektrik yoki boshqa xizmat...</span>
+        </Link>
+      </header>
+
+      {/* Categories */}
+      <section className="surface-card fade-up mx-3 mb-3 mt-3 p-3.5">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xl font-extrabold text-[#3a3a3a]">Xizmat toping</p>
+            <p className="mt-0.5 text-xs font-medium text-[#8c8c8c]">Bir necha qadamda muammoni yuboring.</p>
+          </div>
+          <Link href="/categories" className="text-xs font-semibold text-[#ff6b2b]">
+            Barchasi
           </Link>
         </div>
 
@@ -110,77 +113,85 @@ export default async function HomePage() {
             <Link
               key={cat.id}
               href={`/request?category=${cat.slug}`}
-              className="surface-card-soft flex items-center gap-2.5 rounded-2xl px-3 py-2.5 transition hover:border-[#89e8ed]/45"
+              className="surface-card-soft flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition hover:border-[#ff6b2b]/40 hover:shadow-[0_2px_8px_rgba(255,107,43,0.08)]"
             >
-              <span className="text-2xl leading-none shrink-0">{cat.icon}</span>
+              <span className="shrink-0 text-2xl leading-none">{cat.icon}</span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-slate-200">{cat.nameUz}</p>
-                <p className="text-[11px] text-slate-500">{cat._count.masters} usta</p>
+                <p className="truncate text-sm font-bold text-[#3a3a3a]">{cat.nameUz}</p>
+                <p className="text-[11px] text-[#8c8c8c]">{cat._count.masters} usta</p>
               </div>
             </Link>
           ))}
         </div>
 
         <div className="mt-3 grid grid-cols-1 gap-2">
-          <Link href="/request" className="action-amber block text-center text-sm">
+          <Link href="/request" className="action-primary block text-center text-sm">
             Xizmat so'rovi yuborish
           </Link>
-          <Link href="/my-requests" className="action-primary block text-center text-sm">
+          <Link href="/my-requests" className="action-amber block text-center text-sm">
             Mening so'rovlarim
           </Link>
         </div>
       </section>
 
-      <section className="surface-card fade-up stagger-2 p-3.5">
+      {/* Top Masters */}
+      <section className="surface-card fade-up stagger-1 mx-3 p-3.5">
         <div className="mb-3 flex items-center justify-between">
           <p className="section-title">Top ustalar</p>
-          <Link href="/ustalar" className="text-xs font-semibold text-[#89e8ed]">
+          <Link href="/ustalar" className="text-xs font-semibold text-[#ff6b2b]">
             Barchasi
           </Link>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {masters.length === 0 && (
-            <p className="surface-card-soft rounded-2xl p-3 text-sm text-slate-500">Ustalar yuklanmoqda...</p>
+            <p className="surface-card-soft rounded-xl p-3 text-sm text-[#8c8c8c]">Ustalar yuklanmoqda...</p>
           )}
           {masters.map((m) => {
             const palette = avatarPalette(m.fullName)
             return (
-            <Link
-              key={m.id}
-              href={`/usta/${m.id}`}
-              className="surface-card-soft flex items-center gap-3 rounded-2xl p-2.5 transition hover:border-[#89e8ed]/35"
-            >
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-xl text-sm font-bold shrink-0"
-                style={{ background: palette.bg, color: palette.text }}
+              <Link
+                key={m.id}
+                href={`/usta/${m.id}`}
+                className="flex items-center gap-3 rounded-xl border border-[#e9e9e9] bg-white p-2.5 transition hover:border-[#ff6b2b]/30 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
               >
-                {initials(m.fullName)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-extrabold text-slate-100">{m.fullName}</p>
-                <p className="truncate text-xs font-medium text-slate-400">
-                  {m.categories[0]?.category.nameUz ?? "Usta"} · {m.serviceArea}
-                </p>
-                <div className="mt-1 flex items-center gap-2 text-[11px]">
-                  <span className={`status-pill ${m.isVerified ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : "border-slate-500/20 bg-slate-500/10 text-slate-400"}`}>
-                    {m.isVerified ? <><CheckCircle2 className="h-3 w-3" />Tasdiqlangan</> : "Faol"}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-slate-500">
-                    <Clock3 className="h-3 w-3" />
-                    Tez javob
-                  </span>
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
+                  style={{ background: palette.bg, color: palette.text }}
+                >
+                  {initials(m.fullName)}
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 text-sm font-extrabold text-slate-100">
-                  <Star className="h-4 w-4 fill-[#f4c95f] text-[#f4c95f]" />
-                  {m.rating.toFixed(1)}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-extrabold text-[#3a3a3a]">{m.fullName}</p>
+                  <p className="truncate text-xs font-medium text-[#8c8c8c]">
+                    {m.categories[0]?.category.nameUz ?? "Usta"} · {m.serviceArea}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-[11px]">
+                    {m.isVerified ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Tasdiqlangan
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#e9e9e9] bg-[#f5f5f5] px-2 py-0.5 text-[11px] font-semibold text-[#8c8c8c]">
+                        Faol
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1 text-[#8c8c8c]">
+                      <Clock3 className="h-3 w-3" />
+                      Tez javob
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-500">{m.reviewCount} sharh</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-slate-500" />
-            </Link>
+                <div className="text-right">
+                  <div className="flex items-center gap-1 text-sm font-extrabold text-[#3a3a3a]">
+                    <Star className="h-4 w-4 fill-[#f59e0b] text-[#f59e0b]" />
+                    {m.rating.toFixed(1)}
+                  </div>
+                  <p className="text-[11px] text-[#8c8c8c]">{m.reviewCount} sharh</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-[#c0c0c0]" />
+              </Link>
             )
           })}
         </div>

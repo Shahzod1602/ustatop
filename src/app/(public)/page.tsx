@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Search, Star, ChevronRight, UserCircle2, Sparkles, ShieldCheck, Clock3 } from "lucide-react"
+import { Search, Star, ChevronRight, UserCircle2, Sparkles, ShieldCheck, Clock3, CheckCircle2 } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { ThemeVariantToggle } from "@/components/shared/theme-variant-toggle"
 
@@ -29,6 +29,20 @@ async function getData() {
   ])
 
   return { categories, masters }
+}
+
+const AVATAR_PALETTES = [
+  { bg: "#143549", text: "#8de7ec" },
+  { bg: "#1a3020", text: "#86efac" },
+  { bg: "#2d1818", text: "#fca5a5" },
+  { bg: "#1e1835", text: "#c4b5fd" },
+  { bg: "#2a1e08", text: "#fcd34d" },
+  { bg: "#0f2a3a", text: "#93c5fd" },
+]
+
+function avatarPalette(name: string) {
+  const code = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  return AVATAR_PALETTES[code % AVATAR_PALETTES.length]
 }
 
 function initials(fullName: string) {
@@ -68,12 +82,12 @@ export default async function HomePage() {
           </span>
         </div>
 
-        <div className="surface-card-soft rounded-2xl px-3 py-2.5 text-slate-300">
+        <Link href="/categories" className="surface-card-soft block rounded-2xl px-3 py-2.5 text-slate-300 transition hover:border-[#89e8ed]/30">
           <div className="flex items-center gap-2">
-            <Search className="h-4 w-4" />
+            <Search className="h-4 w-4 shrink-0" />
             <span className="text-sm font-semibold">Santexnik, elektrik yoki boshqa xizmatni tanlang</span>
           </div>
-        </div>
+        </Link>
       </header>
 
       <section className="surface-card fade-up stagger-1 mb-3 p-3.5">
@@ -91,16 +105,18 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           {categories.map((cat) => (
             <Link
               key={cat.id}
               href={`/request?category=${cat.slug}`}
-              className="surface-card-soft rounded-2xl px-2 py-3 text-center transition hover:border-[#89e8ed]/45"
+              className="surface-card-soft flex items-center gap-2.5 rounded-2xl px-3 py-2.5 transition hover:border-[#89e8ed]/45"
             >
-              <div className="mb-1 text-xl leading-none">{cat.icon}</div>
-              <p className="line-clamp-2 text-[11px] font-bold leading-tight text-slate-200">{cat.nameUz}</p>
-              <p className="mt-1 text-[10px] text-slate-500">{cat._count.masters} usta</p>
+              <span className="text-2xl leading-none shrink-0">{cat.icon}</span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-200">{cat.nameUz}</p>
+                <p className="text-[11px] text-slate-500">{cat._count.masters} usta</p>
+              </div>
             </Link>
           ))}
         </div>
@@ -124,13 +140,21 @@ export default async function HomePage() {
         </div>
 
         <div className="space-y-2.5">
-          {masters.map((m) => (
+          {masters.length === 0 && (
+            <p className="surface-card-soft rounded-2xl p-3 text-sm text-slate-500">Ustalar yuklanmoqda...</p>
+          )}
+          {masters.map((m) => {
+            const palette = avatarPalette(m.fullName)
+            return (
             <Link
               key={m.id}
               href={`/usta/${m.id}`}
               className="surface-card-soft flex items-center gap-3 rounded-2xl p-2.5 transition hover:border-[#89e8ed]/35"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#143549] text-sm font-bold text-[#8de7ec]">
+              <div
+                className="flex h-12 w-12 items-center justify-center rounded-xl text-sm font-bold shrink-0"
+                style={{ background: palette.bg, color: palette.text }}
+              >
                 {initials(m.fullName)}
               </div>
               <div className="min-w-0 flex-1">
@@ -139,8 +163,8 @@ export default async function HomePage() {
                   {m.categories[0]?.category.nameUz ?? "Usta"} · {m.serviceArea}
                 </p>
                 <div className="mt-1 flex items-center gap-2 text-[11px]">
-                  <span className="status-pill border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
-                    {m.isVerified ? "Verified" : "Faol"}
+                  <span className={`status-pill ${m.isVerified ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : "border-slate-500/20 bg-slate-500/10 text-slate-400"}`}>
+                    {m.isVerified ? <><CheckCircle2 className="h-3 w-3" />Tasdiqlangan</> : "Faol"}
                   </span>
                   <span className="inline-flex items-center gap-1 text-slate-500">
                     <Clock3 className="h-3 w-3" />
@@ -157,7 +181,8 @@ export default async function HomePage() {
               </div>
               <ChevronRight className="h-4 w-4 text-slate-500" />
             </Link>
-          ))}
+            )
+          })}
         </div>
       </section>
     </div>

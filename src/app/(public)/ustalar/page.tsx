@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, Star, CheckCircle2, MapPin, Filter, Phone, Eye } from "lucide-react"
+import { ArrowLeft, Star, CheckCircle2, MapPin, Filter, Phone, Eye, Users } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 type Params = Promise<{
@@ -13,6 +13,20 @@ type Params = Promise<{
 
 export const dynamic = "force-dynamic"
 
+const AVATAR_PALETTES = [
+  { bg: "#143549", text: "#8de7ec" },
+  { bg: "#1a3020", text: "#86efac" },
+  { bg: "#2d1818", text: "#fca5a5" },
+  { bg: "#1e1835", text: "#c4b5fd" },
+  { bg: "#2a1e08", text: "#fcd34d" },
+  { bg: "#0f2a3a", text: "#93c5fd" },
+]
+
+function avatarPalette(name: string) {
+  const code = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  return AVATAR_PALETTES[code % AVATAR_PALETTES.length]
+}
+
 function initials(fullName: string) {
   return fullName
     .split(" ")
@@ -20,6 +34,11 @@ function initials(fullName: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase()
+}
+
+function yearsActive(createdAt: Date) {
+  const years = Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365))
+  return years < 1 ? "Yangi usta" : `${years}+ yil tajriba`
 }
 
 function extractPrice(bio?: string | null) {
@@ -53,6 +72,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
       reviewCount: true,
       bio: true,
       serviceArea: true,
+      createdAt: true,
       categories: { include: { category: true }, take: 1 },
       _count: { select: { posts: true } },
     },
@@ -83,6 +103,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           reviewCount: true,
           bio: true,
           serviceArea: true,
+          createdAt: true,
           categories: { include: { category: true }, take: 1 },
           _count: { select: { posts: true } },
         },
@@ -110,11 +131,13 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
 
       <div className="surface-card fade-up stagger-1 mb-3 p-3.5">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-base font-extrabold text-slate-100">{masters.length} ta natija</p>
-          <span className="chip">
+          <p className="text-base font-extrabold text-slate-100">
+            <span className="text-[#89e8ed]">{masters.length}</span> ta usta topildi
+          </p>
+          <Link href="/ustalar" className="chip">
             <Filter className="mr-1 h-3 w-3" />
-            Filtr
-          </span>
+            Tozalash
+          </Link>
         </div>
 
         <form className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -156,10 +179,25 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
       </div>
 
       <div className="space-y-3 fade-up stagger-2">
-        {masters.map((m) => (
+        {masters.length === 0 && (
+          <div className="surface-card p-6 text-center">
+            <Users className="mx-auto mb-3 h-8 w-8 text-slate-600" />
+            <p className="text-sm font-bold text-slate-300">Usta topilmadi</p>
+            <p className="mt-1 text-xs text-slate-500">Filtrni o'zgartirib ko'ring</p>
+            <Link href="/ustalar" className="action-primary mt-4 inline-flex text-sm">
+              Barcha ustalar
+            </Link>
+          </div>
+        )}
+        {masters.map((m) => {
+          const palette = avatarPalette(m.fullName)
+          return (
           <article key={m.id} className="surface-card p-3">
             <div className="flex items-start gap-3">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#16344c] text-lg font-bold text-[#8ce7eb]">
+              <div
+                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
+                style={{ background: palette.bg, color: palette.text }}
+              >
                 {m.profilePhoto ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-2xl object-cover" />
@@ -174,7 +212,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
                   {m.isVerified && (
                     <span className="status-pill border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
                       <CheckCircle2 className="h-3 w-3" />
-                      Verified
+                      Tasdiqlangan
                     </span>
                   )}
                 </div>
@@ -186,7 +224,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
                 </div>
 
                 <p className="text-sm font-semibold text-slate-300">
-                  {Math.max(1, Math.round(m.reviewCount / 6))} yil tajriba · {extractPrice(m.bio)}
+                  {yearsActive(m.createdAt)} · {extractPrice(m.bio)}
                 </p>
 
                 <div className="mt-1 flex items-center gap-1 text-xs font-medium text-slate-500">
@@ -194,7 +232,9 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
                   {m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}
                 </div>
 
-                <p className="mt-1 text-xs text-slate-500">Ish postlari: {m._count.posts}</p>
+                {m._count.posts > 0 && (
+                  <p className="mt-1 text-xs text-slate-500">{m._count.posts} ta ish namunasi</p>
+                )}
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <a href={`tel:${m.phone}`} className="action-amber inline-flex h-10 items-center justify-center gap-1 text-sm">
@@ -209,7 +249,8 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
               </div>
             </div>
           </article>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

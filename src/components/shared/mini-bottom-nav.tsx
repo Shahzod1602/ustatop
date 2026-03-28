@@ -18,7 +18,7 @@ export function MiniBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-white/10 bg-[linear-gradient(180deg,rgba(8,13,20,0.9)_0%,rgba(8,13,20,0.97)_100%)] backdrop-blur-xl pb-safe">
-      <ul className="grid grid-cols-5 px-1.5 py-2">
+      <ul className="grid grid-cols-5 px-1.5 pt-2 pb-1">
         {navItems.map((item) => {
           const active = pathname === item.href
           const Icon = item.icon

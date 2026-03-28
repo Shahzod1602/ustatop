@@ -1,8 +1,8 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Loader2, MapPin, Plus, TriangleAlert } from "lucide-react"
+import { ArrowLeft, ImagePlus, Loader2, MapPin, X, TriangleAlert } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,8 @@ function RequestPageInner() {
   const [categories, setCategories] = useState<Category[]>([])
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const categorySlug = searchParams.get("category")
 
@@ -54,7 +56,7 @@ function RequestPageInner() {
     resolver: zodResolver(serviceRequestSchema),
     defaultValues: {
       city: "Toshkent",
-      urgency: "URGENT",
+      urgency: "MEDIUM",
       customerName: "",
       customerPhone: "",
       title: "",
@@ -179,7 +181,7 @@ function RequestPageInner() {
 
             <div>
               <Label className="mb-1.5 block text-xs font-bold text-slate-400">Shoshilinchlik</Label>
-              <Select defaultValue="URGENT" onValueChange={(v) => setValue("urgency", v as ServiceRequestInput["urgency"])}>
+              <Select defaultValue="MEDIUM" onValueChange={(v) => setValue("urgency", v as ServiceRequestInput["urgency"])}>
                 <SelectTrigger className="h-11 rounded-xl border-white/10 bg-[#101826]">
                   <SelectValue />
                 </SelectTrigger>
@@ -212,13 +214,39 @@ function RequestPageInner() {
           )}
         </div>
 
-        <div className="rounded-xl border border-dashed border-white/20 bg-[#101826] p-4">
-          <button
-            type="button"
-            className="mx-auto flex h-16 w-24 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-slate-400"
-          >
-            <Plus className="h-7 w-7" />
-          </button>
+        <div className="rounded-xl border border-dashed border-white/20 bg-[#101826] p-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) setImagePreview(URL.createObjectURL(file))
+            }}
+          />
+          {imagePreview ? (
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imagePreview} alt="preview" className="h-36 w-full rounded-lg object-cover" />
+              <button
+                type="button"
+                onClick={() => { setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
+                className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/5 py-5 text-slate-400 hover:border-[#89e8ed]/40 hover:text-slate-300 transition"
+            >
+              <ImagePlus className="h-6 w-6" />
+              <span className="text-xs font-semibold">Rasm qo'shish (ixtiyoriy)</span>
+            </button>
+          )}
         </div>
 
         <button type="submit" disabled={loading} className="action-amber mt-2 flex h-12 w-full items-center justify-center text-base disabled:opacity-70">

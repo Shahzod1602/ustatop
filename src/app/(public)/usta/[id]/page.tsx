@@ -4,6 +4,20 @@ import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
+const AVATAR_PALETTES = [
+  { bg: "#143549", text: "#8de7ec" },
+  { bg: "#1a3020", text: "#86efac" },
+  { bg: "#2d1818", text: "#fca5a5" },
+  { bg: "#1e1835", text: "#c4b5fd" },
+  { bg: "#2a1e08", text: "#fcd34d" },
+  { bg: "#0f2a3a", text: "#93c5fd" },
+]
+
+function avatarPalette(name: string) {
+  const code = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  return AVATAR_PALETTES[code % AVATAR_PALETTES.length]
+}
+
 function initials(fullName: string) {
   return fullName
     .split(" ")
@@ -36,6 +50,8 @@ export default async function MasterProfilePage({ params }: { params: Promise<{ 
     )
   }
 
+  const palette = avatarPalette(master.fullName)
+
   return (
     <div className="min-h-screen px-3 pb-4 pt-safe text-slate-100">
       <header className="surface-card fade-up mb-3 px-3 py-3">
@@ -53,7 +69,10 @@ export default async function MasterProfilePage({ params }: { params: Promise<{ 
       <div className="space-y-3 fade-up stagger-1">
         <section className="surface-card p-3.5">
           <div className="flex items-start gap-3">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#153044] text-lg font-bold text-[#89e8ed]">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-bold"
+              style={{ background: palette.bg, color: palette.text }}
+            >
               {master.profilePhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={master.profilePhoto} alt={master.fullName} className="h-16 w-16 rounded-2xl object-cover" />
@@ -72,7 +91,7 @@ export default async function MasterProfilePage({ params }: { params: Promise<{ 
                 </span>
                 <span className="status-pill border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
                   <ShieldCheck className="h-3 w-3" />
-                  {master.isVerified ? "Verified" : "Faol usta"}
+                  {master.isVerified ? "Tasdiqlangan" : "Faol usta"}
                 </span>
               </div>
 

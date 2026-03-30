@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, MapPin, Phone, Star, ShieldCheck, BadgeCheck } from "lucide-react"
+import { ArrowLeft, MapPin, Phone, Star, ShieldCheck, BadgeCheck, CheckCircle2, Briefcase, MessageSquare } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
@@ -41,133 +41,193 @@ export default async function MasterProfilePage({ params }: { params: Promise<{ 
 
   if (!master) {
     return (
-      <div className="p-4 text-sm text-[#3a3a3a]">
-        <Link href="/ustalar" className="font-semibold text-[#ff6b2b] underline">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f0ede8] p-6 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+          <ShieldCheck className="h-8 w-8 text-[#c0b8b0]" />
+        </div>
+        <p className="mb-1 text-lg font-black text-[#1a1a1a]">Usta topilmadi</p>
+        <p className="mb-4 text-sm text-[#8c8c8c]">Ushbu profil mavjud emas yoki o'chirilgan.</p>
+        <Link href="/ustalar" className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#ff6b2b] px-5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20]">
+          <ArrowLeft className="h-4 w-4" />
           Orqaga
         </Link>
-        <p className="mt-2">Usta topilmadi.</p>
       </div>
     )
   }
 
   const palette = avatarPalette(master.fullName)
+  const avgRating = master.reviews.length > 0
+    ? (master.reviews.reduce((sum, r) => sum + r.rating, 0) / master.reviews.length).toFixed(1)
+    : master.rating.toFixed(1)
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] pb-4 text-[#3a3a3a]">
-      <header className="bg-[#ff6b2b] px-3 pt-safe pb-3">
-        <div className="flex items-center gap-2">
-          <Link href="/ustalar" className="rounded-xl bg-white/20 p-2 text-white hover:bg-white/30">
+    <div className="min-h-screen bg-[#f0ede8] pb-4 text-[#1a1a1a]">
+
+      {/* Header */}
+      <header className="relative overflow-hidden bg-[#1a1a2e] px-3 pt-safe pb-4">
+        <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[#ff6b2b]/15" />
+        <div className="relative flex items-center gap-3">
+          <Link href="/ustalar" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-lg font-bold text-white">Usta profili</h1>
-            <p className="text-xs text-white/70">Ishonch va tajribani ko'ring</p>
+            <h1 className="text-[17px] font-black leading-tight text-white">Usta profili</h1>
+            <p className="text-[11px] text-white/50">Ishonch va tajribani ko'ring</p>
           </div>
         </div>
       </header>
 
-      <div className="space-y-3 fade-up px-3 pt-3">
+      <div className="fade-up space-y-3 px-3 pt-3">
+
         {/* Profile Card */}
-        <section className="surface-card p-3.5">
+        <section className="rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
           <div className="flex items-start gap-3">
+            {/* Avatar */}
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-bold"
+              className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl text-xl font-black shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
               style={{ background: palette.bg, color: palette.text }}
             >
               {master.profilePhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={master.profilePhoto} alt={master.fullName} className="h-16 w-16 rounded-2xl object-cover" />
+                <img src={master.profilePhoto} alt={master.fullName} className="h-[68px] w-[68px] rounded-2xl object-cover" />
               ) : (
                 initials(master.fullName)
               )}
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-lg font-extrabold text-[#3a3a3a]">{master.fullName}</p>
-
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
-                  <Star className="h-3 w-3 fill-current" />
-                  {master.rating.toFixed(1)} reyting
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                  <ShieldCheck className="h-3 w-3" />
-                  {master.isVerified ? "Tasdiqlangan" : "Faol usta"}
-                </span>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[18px] font-black leading-tight text-[#1a1a1a]">{master.fullName}</p>
+                {master.isVerified && (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                    <CheckCircle2 className="h-2.5 w-2.5" />
+                    Tasdiqlangan
+                  </span>
+                )}
               </div>
 
-              <div className="mt-2 flex items-center gap-1 text-xs text-[#8c8c8c]">
-                <MapPin className="h-3.5 w-3.5" />
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <div className="flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5">
+                  <Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" />
+                  <span className="text-[13px] font-black text-[#1a1a1a]">{avgRating}</span>
+                </div>
+                <span className="text-[11px] text-[#8c8c8c]">{master.reviewCount} sharh</span>
+              </div>
+
+              <div className="mt-2 flex items-center gap-1 text-[11px] text-[#8c8c8c]">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
                 {master.serviceArea}
               </div>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {master.categories.map((c) => (
-              <span key={c.id} className="rounded-full border border-[#e9e9e9] bg-[#f5f5f5] px-2.5 py-1 text-xs font-medium text-[#3a3a3a]">
-                {c.category.icon} {c.category.nameUz}
-              </span>
-            ))}
-          </div>
-
-          {master.bio && (
-            <p className="mt-3 rounded-xl border border-[#e9e9e9] bg-[#f7f7f7] p-2.5 text-sm text-[#5a5a5a]">
-              {master.bio}
-            </p>
+          {/* Categories */}
+          {master.categories.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {master.categories.map((c) => (
+                <span key={c.id} className="inline-flex items-center gap-1 rounded-lg border border-[#ede8e0] bg-[#faf8f5] px-2.5 py-1 text-[11px] font-semibold text-[#5a5a5a]">
+                  {c.category.icon} {c.category.nameUz}
+                </span>
+              ))}
+            </div>
           )}
 
-          <div className="mt-3">
-            <a href={`tel:${master.phone}`} className="action-primary inline-flex h-11 w-full items-center justify-center gap-1 text-sm">
-              <Phone className="h-4 w-4" />
+          {/* Bio */}
+          {master.bio && (
+            <div className="mt-3 rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-3">
+              <p className="text-[13px] leading-relaxed text-[#5a5a5a]">{master.bio}</p>
+            </div>
+          )}
+
+          {/* CTA */}
+          <div className="mt-4">
+            <a
+              href={`tel:${master.phone}`}
+              className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#ff6b2b] text-[15px] font-bold text-white shadow-[0_4px_16px_rgba(255,107,43,0.32)] transition hover:bg-[#e85d20] active:translate-y-[1px]"
+            >
+              <Phone className="h-5 w-5" />
               Qo'ng'iroq qilish
             </a>
           </div>
         </section>
 
         {/* Posts */}
-        <section className="surface-card p-3.5">
-          <h2 className="mb-2 section-title">Ish namunalari</h2>
-          <div className="space-y-2.5">
-            {master.posts.length === 0 && (
-              <div className="surface-card-soft rounded-xl p-3 text-sm text-[#8c8c8c]">
-                Hozircha ish namunalari yo'q.
-              </div>
+        <section className="rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50">
+              <Briefcase className="h-3.5 w-3.5 text-[#ff6b2b]" />
+            </div>
+            <h2 className="text-[16px] font-black text-[#1a1a1a]">Ish namunalari</h2>
+            {master.posts.length > 0 && (
+              <span className="ml-auto rounded-lg bg-[#f0ede8] px-2 py-0.5 text-[11px] font-bold text-[#8c8c8c]">
+                {master.posts.length} ta
+              </span>
             )}
-            {master.posts.map((post) => (
-              <article key={post.id} className="overflow-hidden rounded-xl border border-[#e9e9e9] bg-white">
-                {post.imageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={post.imageUrl} alt={post.title} className="h-40 w-full object-cover" />
-                )}
-                <div className="p-3">
-                  <p className="text-sm font-bold text-[#3a3a3a]">{post.title}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-[#8c8c8c]">{post.content}</p>
-                </div>
-              </article>
-            ))}
           </div>
+
+          {master.posts.length === 0 ? (
+            <div className="rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-4 text-center">
+              <p className="text-sm text-[#8c8c8c]">Hozircha ish namunalari yo'q.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {master.posts.map((post) => (
+                <article key={post.id} className="overflow-hidden rounded-xl border border-[#ede8e0] bg-[#faf8f5]">
+                  {post.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.imageUrl} alt={post.title} className="h-44 w-full object-cover" />
+                  )}
+                  <div className="p-3">
+                    <p className="text-[14px] font-bold text-[#1a1a1a]">{post.title}</p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-[#8c8c8c]">{post.content}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Reviews */}
-        <section className="surface-card p-3.5">
-          <h2 className="mb-2 section-title">Sharhlar</h2>
-          <div className="space-y-2">
-            {master.reviews.length === 0 && (
-              <div className="surface-card-soft rounded-xl p-3 text-sm text-[#8c8c8c]">
-                Hozircha sharhlar yo'q.
-              </div>
+        <section className="rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+              <MessageSquare className="h-3.5 w-3.5 text-[#f59e0b]" />
+            </div>
+            <h2 className="text-[16px] font-black text-[#1a1a1a]">Sharhlar</h2>
+            {master.reviews.length > 0 && (
+              <span className="ml-auto rounded-lg bg-[#f0ede8] px-2 py-0.5 text-[11px] font-bold text-[#8c8c8c]">
+                {master.reviews.length} ta
+              </span>
             )}
-            {master.reviews.map((review) => (
-              <article key={review.id} className="surface-card-soft rounded-xl p-3">
-                <div className="mb-1 inline-flex items-center gap-1 text-amber-600">
-                  <BadgeCheck className="h-4 w-4" />
-                  <span className="text-sm font-bold">{review.rating}/5</span>
-                </div>
-                <p className="text-sm text-[#5a5a5a]">{review.comment || "Izoh qoldirilmagan"}</p>
-              </article>
-            ))}
           </div>
+
+          {master.reviews.length === 0 ? (
+            <div className="rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-4 text-center">
+              <p className="text-sm text-[#8c8c8c]">Hozircha sharhlar yo'q.</p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {master.reviews.map((review) => (
+                <article key={review.id} className="rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-3">
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${i < review.rating ? "fill-[#f59e0b] text-[#f59e0b]" : "fill-[#e0d8d0] text-[#e0d8d0]"}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-bold text-[#8c8c8c]">{review.rating}/5</span>
+                    <BadgeCheck className="ml-auto h-4 w-4 text-emerald-500" />
+                  </div>
+                  <p className="text-[13px] leading-relaxed text-[#5a5a5a]">
+                    {review.comment || "Izoh qoldirilmagan"}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>

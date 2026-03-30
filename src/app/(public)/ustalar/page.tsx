@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, Star, CheckCircle2, MapPin, Phone, Eye, Users } from "lucide-react"
+import { ArrowLeft, Star, CheckCircle2, MapPin, Phone, Eye, Users, SlidersHorizontal } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 type Params = Promise<{
@@ -116,76 +116,92 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] pb-4 text-[#3a3a3a]">
-      <header className="bg-[#ff6b2b] px-3 pt-safe pb-3">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="rounded-xl bg-white/20 p-2 text-white hover:bg-white/30">
+    <div className="min-h-screen bg-[#f0ede8] pb-4 text-[#1a1a1a]">
+
+      {/* Header */}
+      <header className="relative overflow-hidden bg-[#1a1a2e] px-3 pt-safe pb-4">
+        <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[#ff6b2b]/15" />
+        <div className="relative flex items-center gap-3">
+          <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-lg font-bold text-white">Ustalar ro'yxati</h1>
-            <p className="text-xs text-white/70">Mos ustani reyting va tajriba bo'yicha tanlang</p>
+            <h1 className="text-[17px] font-black leading-tight text-white">Ustalar ro'yxati</h1>
+            <p className="text-[11px] text-white/50">Reyting va tajriba bo'yicha tanlang</p>
           </div>
         </div>
       </header>
 
       {/* Search & Filter */}
-      <div className="surface-card fade-up mx-3 mb-3 mt-3 p-3.5">
+      <div className="fade-up mx-3 mb-3 mt-3 rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-base font-extrabold text-[#3a3a3a]">
-            <span className="text-[#ff6b2b]">{masters.length}</span> ta usta topildi
-          </p>
-          <Link href="/ustalar" className="chip">
-            Tozalash
-          </Link>
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-[#ff6b2b]" />
+            <p className="text-[14px] font-black text-[#1a1a1a]">
+              <span className="text-[#ff6b2b]">{masters.length}</span> ta usta topildi
+            </p>
+          </div>
+          {(q || city || minRating || sort) && (
+            <Link href="/ustalar" className="rounded-lg border border-[#e0d8d0] bg-[#f7f4f0] px-2.5 py-1 text-[11px] font-bold text-[#8c8c8c] hover:border-[#ff6b2b]/30 hover:text-[#ff6b2b] transition-colors">
+              Tozalash
+            </Link>
+          )}
         </div>
 
-        <form className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Usta nomi..."
-            className="h-10 rounded-xl border border-[#e9e9e9] bg-white px-3 text-sm text-[#3a3a3a] outline-none focus:border-[#ff6b2b]"
-          />
-          <input
-            name="city"
-            defaultValue={city ?? ""}
-            placeholder="Shahar..."
-            className="h-10 rounded-xl border border-[#e9e9e9] bg-white px-3 text-sm text-[#3a3a3a] outline-none focus:border-[#ff6b2b]"
-          />
-          <button className="action-primary h-10 px-3 py-0 text-sm">Qidirish</button>
+        <form className="mb-3 grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              name="q"
+              defaultValue={q ?? ""}
+              placeholder="Usta nomi..."
+              className="h-10 rounded-xl border border-[#ede8e0] bg-[#faf8f5] px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#b0a8a0] focus:border-[#ff6b2b] transition-colors"
+            />
+            <input
+              name="city"
+              defaultValue={city ?? ""}
+              placeholder="Shahar..."
+              className="h-10 rounded-xl border border-[#ede8e0] bg-[#faf8f5] px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#b0a8a0] focus:border-[#ff6b2b] transition-colors"
+            />
+          </div>
+          <button className="h-10 rounded-xl bg-[#ff6b2b] text-sm font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20] active:translate-y-[1px]">
+            Qidirish
+          </button>
         </form>
 
-        <div className="grid grid-cols-3 gap-2 text-xs font-bold">
-          <Link
-            href={`/ustalar${requestId ? `?requestId=${requestId}` : ""}`}
-            className={`rounded-xl border px-2 py-2 text-center ${!city && !minRating && !sort ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b]" : "border-[#e9e9e9] bg-white text-[#8c8c8c]"}`}
-          >
-            Barchasi
-          </Link>
-          <Link
-            href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`}
-            className={`rounded-xl border px-2 py-2 text-center ${minRating && minRating >= 4.5 ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b]" : "border-[#e9e9e9] bg-white text-[#8c8c8c]"}`}
-          >
-            Reyting 4.5+
-          </Link>
-          <Link
-            href={`/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`}
-            className={`rounded-xl border px-2 py-2 text-center ${sort === "new" ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b]" : "border-[#e9e9e9] bg-white text-[#8c8c8c]"}`}
-          >
-            Yangi
-          </Link>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "Barchasi", href: `/ustalar${requestId ? `?requestId=${requestId}` : ""}`, active: !city && !minRating && !sort },
+            { label: "Reyting 4.5+", href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`, active: !!(minRating && minRating >= 4.5) },
+            { label: "Yangi", href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`, active: sort === "new" },
+          ].map(({ label, href, active }) => (
+            <Link
+              key={label}
+              href={href}
+              className={`rounded-xl border px-2 py-2 text-center text-[11px] font-bold transition-all ${
+                active
+                  ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b] shadow-[0_2px_8px_rgba(255,107,43,0.12)]"
+                  : "border-[#ede8e0] bg-[#faf8f5] text-[#8c8c8c] hover:border-[#ff6b2b]/20 hover:text-[#ff6b2b]"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
 
       {/* Masters List */}
-      <div className="space-y-2.5 fade-up stagger-1 px-3">
+      <div className="fade-up stagger-1 space-y-2.5 px-3">
         {masters.length === 0 && (
-          <div className="surface-card p-6 text-center">
-            <Users className="mx-auto mb-3 h-8 w-8 text-[#c0c0c0]" />
-            <p className="text-sm font-bold text-[#3a3a3a]">Usta topilmadi</p>
-            <p className="mt-1 text-xs text-[#8c8c8c]">Filtrni o'zgartirib ko'ring</p>
-            <Link href="/ustalar" className="action-primary mt-4 inline-flex text-sm">
+          <div className="rounded-2xl border border-[#e0d8d0] bg-white p-8 text-center shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0ede8]">
+              <Users className="h-7 w-7 text-[#c0b8b0]" />
+            </div>
+            <p className="text-[15px] font-black text-[#1a1a1a]">Usta topilmadi</p>
+            <p className="mt-1 text-sm text-[#8c8c8c]">Filtrni o'zgartirib ko'ring</p>
+            <Link
+              href="/ustalar"
+              className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#ff6b2b] px-5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20]"
+            >
               Barcha ustalar
             </Link>
           </div>
@@ -194,57 +210,75 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
         {masters.map((m) => {
           const palette = avatarPalette(m.fullName)
           return (
-            <article key={m.id} className="surface-card p-3">
+            <article key={m.id} className="group rounded-2xl border border-[#e0d8d0] bg-white p-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-all hover:border-[#ff6b2b]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
               <div className="flex items-start gap-3">
+                {/* Avatar */}
                 <div
-                  className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
+                  className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-2xl text-lg font-black"
                   style={{ background: palette.bg, color: palette.text }}
                 >
                   {m.profilePhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.profilePhoto} alt={m.fullName} className="h-20 w-20 rounded-2xl object-cover" />
+                    <img src={m.profilePhoto} alt={m.fullName} className="h-[72px] w-[72px] rounded-2xl object-cover" />
                   ) : (
                     initials(m.fullName)
                   )}
                 </div>
 
                 <div className="min-w-0 flex-1">
+                  {/* Name + verified */}
                   <div className="mb-1 flex items-start justify-between gap-2">
-                    <p className="truncate text-[17px] font-extrabold text-[#3a3a3a]">{m.fullName}</p>
+                    <p className="truncate text-[16px] font-black text-[#1a1a1a]">{m.fullName}</p>
                     {m.isVerified && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                        <CheckCircle2 className="h-3 w-3" />
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                        <CheckCircle2 className="h-2.5 w-2.5" />
                         Tasdiqlangan
                       </span>
                     )}
                   </div>
 
-                  <div className="mb-1 flex items-center gap-1.5">
-                    <Star className="h-4 w-4 fill-[#f59e0b] text-[#f59e0b]" />
-                    <span className="text-sm font-bold text-[#3a3a3a]">{m.rating.toFixed(1)}</span>
-                    <span className="text-xs text-[#8c8c8c]">({m.reviewCount} sharh)</span>
+                  {/* Rating */}
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" />
+                      <span className="text-[13px] font-black text-[#1a1a1a]">{m.rating.toFixed(1)}</span>
+                    </div>
+                    <span className="text-[11px] text-[#8c8c8c]">({m.reviewCount} sharh)</span>
+                    {m._count.posts > 0 && (
+                      <span className="text-[11px] text-[#8c8c8c]">· {m._count.posts} ish</span>
+                    )}
                   </div>
 
-                  <p className="text-sm font-semibold text-[#5a5a5a]">
-                    {yearsActive(m.createdAt)} · {extractPrice(m.bio)}
-                  </p>
-
-                  <div className="mt-1 flex items-center gap-1 text-xs font-medium text-[#8c8c8c]">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}
+                  {/* Info row */}
+                  <div className="mb-1 flex items-center gap-1 text-[11px] text-[#8c8c8c]">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}</span>
                   </div>
 
-                  {m._count.posts > 0 && (
-                    <p className="mt-1 text-xs text-[#8c8c8c]">{m._count.posts} ta ish namunasi</p>
-                  )}
+                  {/* Experience + price */}
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <span className="rounded-md bg-[#f0ede8] px-2 py-0.5 font-semibold text-[#6a6460]">
+                      {yearsActive(m.createdAt)}
+                    </span>
+                    <span className="rounded-md bg-[#f0ede8] px-2 py-0.5 font-semibold text-[#6a6460]">
+                      {extractPrice(m.bio)}
+                    </span>
+                  </div>
 
+                  {/* Action buttons */}
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <a href={`tel:${m.phone}`} className="action-amber inline-flex h-10 items-center justify-center gap-1 text-sm">
-                      <Phone className="h-4 w-4" />
+                    <a
+                      href={`tel:${m.phone}`}
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#ff6b2b]/30 bg-orange-50 text-[12px] font-bold text-[#ff6b2b] transition hover:bg-orange-100 active:translate-y-[1px]"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
                       Qo'ng'iroq
                     </a>
-                    <Link href={`/usta/${m.id}`} className="action-primary inline-flex h-10 items-center justify-center gap-1 text-sm">
-                      <Eye className="h-4 w-4" />
+                    <Link
+                      href={`/usta/${m.id}`}
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#ff6b2b] text-[12px] font-bold text-white shadow-[0_3px_10px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20] active:translate-y-[1px]"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
                       Profil
                     </Link>
                   </div>

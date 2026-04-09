@@ -9,6 +9,9 @@ build
 telegram-bot/.env
 telegram-bot/.venv
 telegram-bot/.venv312
+.venv/
+.venv312/
+tsconfig.tsbuildinfo
 __pycache__/
 *.pyc
 

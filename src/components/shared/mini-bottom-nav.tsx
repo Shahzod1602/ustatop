@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { House, Grid2x2, ClipboardList, Wrench, User } from "lucide-react"
+import { House, Map, ClipboardList, Wrench, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "Bosh sahifa", icon: House },
-  { href: "/categories", label: "Ruknlar", icon: Grid2x2 },
+  { href: "/xarita", label: "Xarita", icon: Map },
   { href: "/my-requests", label: "So'rovlar", icon: ClipboardList },
   { href: "/ustalar", label: "Ustalar", icon: Wrench },
   { href: "/kabinet", label: "Kabinet", icon: User },

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import Script from "next/script"
+import { AuthSessionProvider } from "@/components/shared/session-provider"
 
 export const metadata: Metadata = {
   title: { default: "UstaTop — Ishonchli usta toping", template: "%s | UstaTop" },
@@ -33,7 +34,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="theme-variant-init" strategy="beforeInteractive">
           {`try { var v = localStorage.getItem('ui-theme-variant') || 'premium'; document.documentElement.dataset.uiTheme = v; } catch (e) { document.documentElement.dataset.uiTheme = 'premium'; }`}
         </Script>
-        {children}
+        <AuthSessionProvider>
+          {children}
+        </AuthSessionProvider>
         <Toaster />
       </body>
     </html>

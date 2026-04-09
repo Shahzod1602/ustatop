@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import Link from "next/link"
 import {
   Share2,
@@ -49,24 +50,23 @@ const STATUSES: { label: string; value: FilterStatus }[] = [
 
 export default function KabinetPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [activeTab, setActiveTab] = useState<TabKey>("elon")
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [showStatusDropdown, setShowStatusDropdown] = useState(false)
   const [master, setMaster] = useState<MasterStats | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
+  const loading = status === "loading"
 
   useEffect(() => {
-    // Try to load master session
-    fetch("/api/profile")
+    if (status === "loading") return
+    if (!session?.user?.id) return
+    fetch(`/api/masters/${session.user.id}`)
       .then((r) => r.json())
-      .then((data) => {
-        if (data?.profile) setMaster(data.profile)
-      })
+      .then((data) => { if (data?.id) setMaster(data) })
       .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  }, [session, status])
 
   useEffect(() => {
     if (!master?.id) return
@@ -80,9 +80,14 @@ export default function KabinetPage() {
     searchQuery ? p.title.toLowerCase().includes(searchQuery.toLowerCase()) : true
   )
 
-  const displayName = master?.fullName ?? "Mehmon"
-  const username = master ? `${master.fullName.split(" ")[0].toLowerCase()}_${master.phone.slice(-4)}` : "mehmon"
-  const initials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  const displayName = master?.fullName ?? session?.user?.name ?? "Mehmon"
+  const username = master
+    ? `${master.fullName.split(" ")[0].toLowerCase()}_${master.phone.slice(-4)}`
+    : session?.user?.name
+    ? session.user.name.split(" ")[0].toLowerCase()
+    : "mehmon"
+  const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+  const isLoggedIn = !!session?.user
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f5f5f5", fontFamily: "Manrope, sans-serif" }}>
@@ -144,12 +149,12 @@ export default function KabinetPage() {
             <div className="flex justify-center py-2">
               <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
             </div>
-          ) : master ? (
+          ) : isLoggedIn ? (
             <>
               <div className="mb-3 rounded-xl bg-gray-50 px-4 py-3 text-center">
                 <span className="text-[13px] text-gray-500">Reyting: </span>
-                <span className="text-[15px] font-bold text-gray-900">{master.rating.toFixed(1)} ★</span>
-                <span className="ml-3 text-[13px] text-gray-500">{master.reviewCount} sharh</span>
+                <span className="text-[15px] font-bold text-gray-900">{master?.rating.toFixed(1) ?? "0.0"} ★</span>
+                <span className="ml-3 text-[13px] text-gray-500">{master?.reviewCount ?? 0} sharh</span>
               </div>
               <div className="flex gap-2.5">
                 <Link

@@ -38,21 +38,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: "Credentials",
       credentials: {
         phone: { label: "Telefon", type: "text" },
+        password: { label: "Parol", type: "password" },
       },
       async authorize(credentials) {
         const parsed = masterLoginSchema.safeParse(credentials)
         if (!parsed.success) throw new Error("Noto'g'ri ma'lumotlar kiritildi")
 
-        const { phone } = parsed.data
+        const { phone, password } = parsed.data
         const normalizedPhone = phone.startsWith("+") ? phone : `+${phone}`
 
         const master = await prisma.master.findUnique({
           where: { phone: normalizedPhone },
-          select: { id: true, email: true, fullName: true, isVerified: true, isActive: true },
+          select: { id: true, email: true, fullName: true, isVerified: true, isActive: true, password: true },
         })
 
-        if (!master) throw new Error("Bu telefon raqam bilan akkaunt topilmadi")
+        if (!master) throw new Error("Telefon raqam yoki parol noto'g'ri")
         if (!master.isActive) throw new Error("Akkauntingiz bloklangan. Administrator bilan bog'laning")
+
+        const ok = await bcryptjs.compare(password, master.password)
+        if (!ok) throw new Error("Telefon raqam yoki parol noto'g'ri")
 
         return {
           id: master.id,

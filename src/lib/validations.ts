@@ -6,6 +6,7 @@ export const masterLoginSchema = z.object({
   phone: z
     .string()
     .regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
+  password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
 })
 
 export const masterRegisterSchema = z.object({
@@ -13,6 +14,7 @@ export const masterRegisterSchema = z.object({
   phone: z
     .string()
     .regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
+  password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
   serviceArea: z.string().min(2, "Xizmat hududini kiriting"),
   categories: z.array(z.string()).min(1, "Kamida bitta kategoriya tanlang"),
   bio: z.string().max(500, "Bio 500 belgidan oshmasligi kerak").optional(),

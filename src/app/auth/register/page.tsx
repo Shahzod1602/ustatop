@@ -52,7 +52,7 @@ export default function RegisterPage() {
   }
 
   const goNextStep = async () => {
-    const valid = await trigger(["fullName", "phone"])
+    const valid = await trigger(["fullName", "phone", "password"])
     if (valid) setStep(2)
   }
 
@@ -105,6 +105,12 @@ export default function RegisterPage() {
                 <Label htmlFor="phone">Telefon raqam *</Label>
                 <Input id="phone" placeholder="+998901234567" {...register("phone")} />
                 {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="password">Parol *</Label>
+                <Input id="password" type="password" placeholder="Kamida 6 ta belgi" autoComplete="new-password" {...register("password")} />
+                {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
               </div>
 
               <Button type="button" className="w-full" onClick={goNextStep}>

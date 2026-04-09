@@ -32,6 +32,7 @@ export default function LoginPage() {
     try {
       const result = await signIn("credentials", {
         phone: data.phone,
+        password: data.password,
         redirect: false,
       })
 
@@ -72,6 +73,18 @@ export default function LoginPage() {
               {...register("phone")}
             />
             {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="password">Parol</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              {...register("password")}
+            />
+            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

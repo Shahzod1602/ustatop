@@ -10,7 +10,7 @@ const navItems = [
   { href: "/categories", label: "Ruknlar", icon: Grid2x2 },
   { href: "/my-requests", label: "So'rovlar", icon: ClipboardList },
   { href: "/ustalar", label: "Ustalar", icon: Wrench },
-  { href: "/account", label: "Profilim", icon: User },
+  { href: "/kabinet", label: "Kabinet", icon: User },
 ]
 
 export function MiniBottomNav() {

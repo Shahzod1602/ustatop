@@ -3,7 +3,7 @@ import type { DefaultSession } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcryptjs from "bcryptjs"
 import { prisma } from "@/lib/prisma"
-import { adminLoginSchema, masterLoginSchema } from "@/lib/validations"
+import { adminLoginSchema, masterLoginSchema, webCustomerLoginSchema } from "@/lib/validations"
 import { authConfig } from "@/lib/auth.config"
 
 // ─── Type augmentation ────────────────────────────────────────────────────────
@@ -15,14 +15,14 @@ declare module "next-auth" {
       email: string
       name: string
       isVerified: boolean
-      role: "MASTER" | "ADMIN"
+      role: "MASTER" | "ADMIN" | "CUSTOMER"
     } & DefaultSession["user"]
   }
 
   interface User {
     id?: string
     isVerified?: boolean
-    role?: "MASTER" | "ADMIN"
+    role?: "MASTER" | "ADMIN" | "CUSTOMER"
   }
 }
 
@@ -64,6 +64,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: master.fullName,
           isVerified: master.isVerified,
           role: "MASTER" as const,
+        }
+      },
+    }),
+
+    // Customer (web user) login
+    CredentialsProvider({
+      id: "customer-credentials",
+      name: "Customer Credentials",
+      credentials: {
+        phone: { label: "Telefon", type: "text" },
+        password: { label: "Parol", type: "password" },
+      },
+      async authorize(credentials) {
+        const parsed = webCustomerLoginSchema.safeParse(credentials)
+        if (!parsed.success) throw new Error("Noto'g'ri ma'lumotlar kiritildi")
+
+        const { phone, password } = parsed.data
+        const normalizedPhone = phone.startsWith("+") ? phone : `+${phone}`
+
+        const customer = await prisma.webCustomer.findUnique({
+          where: { phone: normalizedPhone },
+          select: { id: true, fullName: true, password: true },
+        })
+        if (!customer) throw new Error("Telefon raqam yoki parol noto'g'ri")
+
+        const ok = await bcryptjs.compare(password, customer.password)
+        if (!ok) throw new Error("Telefon raqam yoki parol noto'g'ri")
+
+        return {
+          id: customer.id,
+          email: `customer-${customer.id}@ustatop.local`,
+          name: customer.fullName,
+          isVerified: true,
+          role: "CUSTOMER" as const,
         }
       },
     }),
@@ -110,7 +144,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isVerified = user.isVerified as boolean
         token.role = user.role as "MASTER" | "ADMIN"
       }
-      // Refresh isVerified on each token check for masters
+      // Refresh isVerified on each token check for masters only
       if (token.id && token.role === "MASTER") {
         const master = await prisma.master.findUnique({
           where: { id: token.id as string },

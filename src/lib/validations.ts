@@ -69,6 +69,18 @@ export type MasterProfileInput = z.infer<typeof masterProfileSchema>
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
+export const webCustomerRegisterSchema = z.object({
+  fullName: z.string().min(2, "Ism kamida 2 ta harf bo'lishi kerak"),
+  phone: z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
+  password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
+})
+export type WebCustomerRegisterInput = z.infer<typeof webCustomerRegisterSchema>
+
+export const webCustomerLoginSchema = z.object({
+  phone: z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri (+998XXXXXXXXX)"),
+  password: z.string().min(6, "Parol kamida 6 ta belgi bo'lishi kerak"),
+})
+
 export const adminLoginSchema = z.object({
   email: z.string().email("Noto'g'ri email format"),
   password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),

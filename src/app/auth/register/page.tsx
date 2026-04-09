@@ -5,38 +5,33 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CheckCircle, Loader2, ArrowLeft, ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { CheckCircle, Loader2, ArrowLeft, ArrowRight, User, Wrench } from "lucide-react"
+import { masterRegisterSchema, webCustomerRegisterSchema, type MasterRegisterInput, type WebCustomerRegisterInput } from "@/lib/validations"
 import { useToast } from "@/hooks/use-toast"
-import { masterRegisterSchema, type MasterRegisterInput } from "@/lib/validations"
 import { cn } from "@/lib/utils"
 
+type Role = "customer" | "master" | null
 interface Category { id: string; nameUz: string; icon: string }
 const CITIES = ["Toshkent", "Samarqand", "Buxoro", "Namangan", "Andijon", "Farg'ona", "Qarshi", "Nukus"]
 
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const [role, setRole] = useState<Role>(null)
   const [step, setStep] = useState(1)
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    trigger,
-    formState: { errors },
-  } = useForm<MasterRegisterInput>({
+  // Master form
+  const masterForm = useForm<MasterRegisterInput>({
     resolver: zodResolver(masterRegisterSchema),
     defaultValues: { serviceArea: "Toshkent", categories: [] },
+  })
+
+  // Customer form
+  const customerForm = useForm<WebCustomerRegisterInput>({
+    resolver: zodResolver(webCustomerRegisterSchema),
   })
 
   useEffect(() => {
@@ -48,15 +43,34 @@ export default function RegisterPage() {
       ? selectedCategories.filter((c) => c !== id)
       : [...selectedCategories, id]
     setSelectedCategories(next)
-    setValue("categories", next)
+    masterForm.setValue("categories", next)
   }
 
-  const goNextStep = async () => {
-    const valid = await trigger(["fullName", "phone", "password"])
+  const goNext = async () => {
+    const valid = await masterForm.trigger(["fullName", "phone", "password"])
     if (valid) setStep(2)
   }
 
-  const onSubmit = async (data: MasterRegisterInput) => {
+  const submitCustomer = async (data: WebCustomerRegisterInput) => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, role: "customer" }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Xatolik")
+      toast({ title: "Muvaffaqiyatli ro'yxatdan o'tdingiz!" })
+      router.push("/auth/login?role=customer")
+    } catch (err: unknown) {
+      toast({ variant: "destructive", title: err instanceof Error ? err.message : "Xatolik" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submitMaster = async (data: MasterRegisterInput) => {
     setLoading(true)
     try {
       const res = await fetch("/api/auth/register", {
@@ -65,141 +79,278 @@ export default function RegisterPage() {
         body: JSON.stringify(data),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error ?? "Xatolik yuz berdi")
-
-      toast({ title: "Muvaffaqiyatli ro'yxatdan o'tdingiz!", description: "Endi tizimga kiring." })
-      router.push("/auth/login")
+      if (!res.ok) throw new Error(json.error ?? "Xatolik")
+      toast({ title: "Muvaffaqiyatli ro'yxatdan o'tdingiz!" })
+      router.push("/auth/login?role=master")
     } catch (err: unknown) {
-      toast({ variant: "destructive", title: "Xatolik", description: err instanceof Error ? err.message : "Qayta urinib ko'ring" })
+      toast({ variant: "destructive", title: err instanceof Error ? err.message : "Xatolik" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader className="text-center pb-2">
-        <CardTitle className="text-2xl">Usta bo&apos;lish</CardTitle>
-        <CardDescription>
-          {step === 1 ? "Hisob ma'lumotlaringizni kiriting" : "Professional ma'lumotlaringizni kiriting"}
-        </CardDescription>
-        {/* Step indicator */}
-        <div className="flex justify-center gap-2 mt-3">
-          {[1, 2].map((s) => (
-            <div key={s} className={cn("h-2 w-12 rounded-full transition-colors", step >= s ? "bg-primary" : "bg-muted")} />
-          ))}
+    <div className="flex min-h-screen flex-col" style={{ background: "linear-gradient(160deg,#0f1923 0%,#1a2d45 60%,#0f1923 100%)" }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 pt-8 pb-4">
+        {role ? (
+          <button onClick={() => { setRole(null); setStep(1) }} className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        ) : (
+          <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        )}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40">UstaTop</p>
+          <p className="text-[15px] font-bold text-white">Ro&apos;yxatdan o&apos;tish</p>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="pt-4">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="fullName">To&apos;liq ism *</Label>
-                <Input id="fullName" placeholder="Sarvar Karimov" {...register("fullName")} />
-                {errors.fullName && <p className="text-xs text-destructive">{errors.fullName.message}</p>}
-              </div>
+      <div className="flex-1 px-5 pb-10">
 
-              <div className="space-y-1">
-                <Label htmlFor="phone">Telefon raqam *</Label>
-                <Input id="phone" placeholder="+998901234567" {...register("phone")} />
-                {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
-              </div>
+        {/* ── STEP 0: Role selector ── */}
+        {!role && (
+          <div className="mt-4">
+            <h1 className="mb-2 text-[26px] font-extrabold leading-tight text-white">
+              Kimсiz?
+            </h1>
+            <p className="mb-8 text-[13px] text-white/50">Rolni tanlang — keyin mos shaklni to&apos;ldirasiz</p>
 
-              <div className="space-y-1">
-                <Label htmlFor="password">Parol *</Label>
-                <Input id="password" type="password" placeholder="Kamida 6 ta belgi" autoComplete="new-password" {...register("password")} />
-                {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-              </div>
-
-              <Button type="button" className="w-full" onClick={goNextStep}>
-                Davom etish <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <button type="button" onClick={() => setStep(1)}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="h-4 w-4" /> Orqaga
+            <div className="space-y-3">
+              {/* Customer card */}
+              <button
+                onClick={() => setRole("customer")}
+                className="group w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition-all hover:border-blue-400/50 hover:bg-blue-500/10 active:scale-[0.98]"
+              >
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-400 transition-colors group-hover:bg-blue-500/30">
+                  <User className="h-6 w-6" />
+                </div>
+                <p className="text-[17px] font-extrabold text-white">Oddiy foydalanuvchi</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                  Usta qidirish, so&apos;rov yuborish, xizmatlar bilan tanishish
+                </p>
+                <div className="mt-3 flex items-center gap-1 text-[12px] font-semibold text-blue-400">
+                  Davom etish <ArrowRight className="h-3.5 w-3.5" />
+                </div>
               </button>
 
-              <div className="space-y-1">
-                <Label>Xizmat hududi *</Label>
-                <Select defaultValue="Toshkent" onValueChange={(v) => setValue("serviceArea", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                {errors.serviceArea && <p className="text-xs text-destructive">{errors.serviceArea.message}</p>}
+              {/* Master card */}
+              <button
+                onClick={() => setRole("master")}
+                className="group w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition-all hover:border-amber-400/50 hover:bg-amber-500/10 active:scale-[0.98]"
+              >
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400 transition-colors group-hover:bg-amber-500/30">
+                  <Wrench className="h-6 w-6" />
+                </div>
+                <p className="text-[17px] font-extrabold text-white">Usta</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                  Xizmat ko&apos;rsatish, e&apos;lon joylash, mijozlar bilan ishlash
+                </p>
+                <div className="mt-3 flex items-center gap-1 text-[12px] font-semibold text-amber-400">
+                  Davom etish <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </button>
+            </div>
+
+            <p className="mt-8 text-center text-[13px] text-white/40">
+              Hisobingiz bormi?{" "}
+              <Link href="/auth/login" className="font-semibold text-white/80 hover:text-white">Kirish</Link>
+            </p>
+          </div>
+        )}
+
+        {/* ── Customer form ── */}
+        {role === "customer" && (
+          <div className="mt-4">
+            <h1 className="mb-1 text-[22px] font-extrabold text-white">Hisob yaratish</h1>
+            <p className="mb-6 text-[12px] text-blue-400">Oddiy foydalanuvchi</p>
+
+            <form onSubmit={customerForm.handleSubmit(submitCustomer)} className="space-y-3">
+              <div>
+                <label className="mb-1.5 block text-[12px] font-semibold text-white/60">To&apos;liq ism</label>
+                <input
+                  placeholder="Sarvar Karimov"
+                  {...customerForm.register("fullName")}
+                  className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-blue-400/60 focus:bg-white/8"
+                />
+                {customerForm.formState.errors.fullName && (
+                  <p className="mt-1 text-[11px] text-red-400">{customerForm.formState.errors.fullName.message}</p>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <Label>Mutaxassislik kategoriyalari * (bir nechtasini tanlang)</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => toggleCategory(cat.id)}
-                      className={cn(
-                        "flex items-center gap-2 rounded-lg border p-2.5 text-left text-sm transition-colors",
-                        selectedCategories.includes(cat.id)
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "border-border hover:bg-accent"
-                      )}
-                    >
-                      <span>{cat.icon}</span>
-                      <span className="font-medium truncate">{cat.nameUz}</span>
-                      {selectedCategories.includes(cat.id) && <CheckCircle className="h-3.5 w-3.5 ml-auto shrink-0" />}
-                    </button>
-                  ))}
+              <div>
+                <label className="mb-1.5 block text-[12px] font-semibold text-white/60">Telefon raqam</label>
+                <input
+                  type="tel"
+                  placeholder="+998901234567"
+                  {...customerForm.register("phone")}
+                  className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-blue-400/60"
+                />
+                {customerForm.formState.errors.phone && (
+                  <p className="mt-1 text-[11px] text-red-400">{customerForm.formState.errors.phone.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[12px] font-semibold text-white/60">Parol</label>
+                <input
+                  type="password"
+                  placeholder="Kamida 6 ta belgi"
+                  autoComplete="new-password"
+                  {...customerForm.register("password")}
+                  className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-blue-400/60"
+                />
+                {customerForm.formState.errors.password && (
+                  <p className="mt-1 text-[11px] text-red-400">{customerForm.formState.errors.password.message}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-blue-500 py-3.5 text-[14px] font-bold text-white transition-all hover:bg-blue-400 active:scale-[0.98] disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ro'yxatdan o'tish"}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ── Master form ── */}
+        {role === "master" && (
+          <div className="mt-4">
+            <div className="mb-6 flex items-center gap-2">
+              <h1 className="text-[22px] font-extrabold text-white">
+                {step === 1 ? "Asosiy ma'lumotlar" : "Mutaxassislik"}
+              </h1>
+              <span className="ml-auto rounded-full bg-amber-400/20 px-2.5 py-0.5 text-[11px] font-bold text-amber-400">
+                {step}/2
+              </span>
+            </div>
+
+            {/* Step 1 */}
+            {step === 1 && (
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-white/60">To&apos;liq ism</label>
+                  <input
+                    placeholder="Sarvar Karimov"
+                    {...masterForm.register("fullName")}
+                    className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-amber-400/60"
+                  />
+                  {masterForm.formState.errors.fullName && (
+                    <p className="mt-1 text-[11px] text-red-400">{masterForm.formState.errors.fullName.message}</p>
+                  )}
                 </div>
-                {selectedCategories.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {selectedCategories.map((id) => {
-                      const cat = categories.find((c) => c.id === id)
-                      return cat ? (
-                        <Badge key={id} variant="secondary" className="text-xs">
-                          {cat.icon} {cat.nameUz}
-                        </Badge>
-                      ) : null
+
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-white/60">Telefon raqam</label>
+                  <input
+                    type="tel"
+                    placeholder="+998901234567"
+                    {...masterForm.register("phone")}
+                    className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-amber-400/60"
+                  />
+                  {masterForm.formState.errors.phone && (
+                    <p className="mt-1 text-[11px] text-red-400">{masterForm.formState.errors.phone.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-white/60">Parol</label>
+                  <input
+                    type="password"
+                    placeholder="Kamida 6 ta belgi"
+                    autoComplete="new-password"
+                    {...masterForm.register("password")}
+                    className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-amber-400/60"
+                  />
+                  {masterForm.formState.errors.password && (
+                    <p className="mt-1 text-[11px] text-red-400">{masterForm.formState.errors.password.message}</p>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 py-3.5 text-[14px] font-bold text-gray-900 transition-all hover:bg-amber-300 active:scale-[0.98]"
+                >
+                  Davom etish <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Step 2 */}
+            {step === 2 && (
+              <form onSubmit={masterForm.handleSubmit(submitMaster)} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-white/60">Shahar</label>
+                  <select
+                    onChange={(e) => masterForm.setValue("serviceArea", e.target.value)}
+                    defaultValue="Toshkent"
+                    className="h-12 w-full rounded-xl border border-white/10 bg-[#1a2d45] px-4 text-[14px] text-white outline-none focus:border-amber-400/60"
+                  >
+                    {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[12px] font-semibold text-white/60">
+                    Kategoriyalar * <span className="text-white/30">(bir nechtasini tanlang)</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                    {categories.map((cat) => {
+                      const active = selectedCategories.includes(cat.id)
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => toggleCategory(cat.id)}
+                          className={cn(
+                            "flex items-center gap-2 rounded-xl border p-2.5 text-left text-[12px] font-semibold transition-all",
+                            active
+                              ? "border-amber-400/60 bg-amber-400/15 text-amber-300"
+                              : "border-white/10 bg-white/5 text-white/60 hover:border-white/20"
+                          )}
+                        >
+                          <span>{cat.icon}</span>
+                          <span className="truncate">{cat.nameUz}</span>
+                          {active && <CheckCircle className="ml-auto h-3.5 w-3.5 shrink-0 text-amber-400" />}
+                        </button>
+                      )
                     })}
                   </div>
-                )}
-                {errors.categories && <p className="text-xs text-destructive">{errors.categories.message}</p>}
-              </div>
+                  {masterForm.formState.errors.categories && (
+                    <p className="mt-1 text-[11px] text-red-400">{masterForm.formState.errors.categories.message}</p>
+                  )}
+                </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="bio">O&apos;zingiz haqingizda (ixtiyoriy)</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Tajriba, ko'nikmalar, ishingiz haqida..."
-                  className="min-h-[80px]"
-                  {...register("bio")}
-                />
-              </div>
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-white/60">
+                    O&apos;zingiz haqingizda <span className="text-white/30">(ixtiyoriy)</span>
+                  </label>
+                  <textarea
+                    placeholder="Tajriba, ko'nikmalar..."
+                    rows={3}
+                    {...masterForm.register("bio")}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder-white/30 outline-none focus:border-amber-400/60 resize-none"
+                  />
+                </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="pricing">Narx ma&apos;lumoti (ixtiyoriy)</Label>
-                <Input id="pricing" placeholder="Masalan: 50,000 — 200,000 so'm" {...register("pricing")} />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saqlanmoqda...</> : "Ro'yxatdan o'tish"}
-              </Button>
-            </div>
-          )}
-        </form>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Hisobingiz bormi?{" "}
-          <Link href="/auth/login" className="text-primary hover:underline font-medium">Kirish</Link>
-        </p>
-      </CardContent>
-    </Card>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 py-3.5 text-[14px] font-bold text-gray-900 transition-all hover:bg-amber-300 active:scale-[0.98] disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ro'yxatdan o'tish"}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

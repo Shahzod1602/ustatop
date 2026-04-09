@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcryptjs from "bcryptjs"
 import { prisma } from "@/lib/prisma"
-import { masterRegisterSchema } from "@/lib/validations"
+import { masterRegisterSchema, webCustomerRegisterSchema } from "@/lib/validations"
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+
+    // ── Customer registration ─────────────────────────────────
+    if (body.role === "customer") {
+      const parsed = webCustomerRegisterSchema.safeParse(body)
+      if (!parsed.success) {
+        return NextResponse.json({ error: "Ma'lumotlar noto'g'ri", details: parsed.error.flatten().fieldErrors }, { status: 400 })
+      }
+      const { fullName, phone, password } = parsed.data
+      const normalizedPhone = phone.startsWith("+") ? phone : `+${phone}`
+
+      const existing = await prisma.webCustomer.findUnique({ where: { phone: normalizedPhone } })
+      if (existing) return NextResponse.json({ error: "Bu telefon raqam allaqachon ro'yxatdan o'tgan" }, { status: 409 })
+
+      const hashed = await bcryptjs.hash(password, 10)
+      await prisma.webCustomer.create({ data: { fullName, phone: normalizedPhone, password: hashed } })
+
+      return NextResponse.json({ success: true, message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!" })
+    }
+
+    // ── Master registration ───────────────────────────────────
     const parsed = masterRegisterSchema.safeParse(body)
 
     if (!parsed.success) {

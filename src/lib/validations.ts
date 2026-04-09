@@ -58,6 +58,9 @@ export const masterProfileSchema = z.object({
   bio: z.string().max(500).optional(),
   serviceArea: z.string().min(2, "Xizmat hududini kiriting"),
   pricing: z.string().max(200).optional(),
+  profilePhoto: z.string().url().optional().or(z.literal("")),
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
 })
 
 export type MasterProfileInput = z.infer<typeof masterProfileSchema>

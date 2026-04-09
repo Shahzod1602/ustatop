@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Star, CheckCircle, Clock, Briefcase } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { RequestCard } from "@/components/shared/request-card"
+import { DashboardRequestList } from "./_components/request-list"
 
 export const dynamic = "force-dynamic"
 
@@ -80,36 +80,7 @@ export default async function DashboardPage() {
       {/* Requests */}
       <div>
         <h2 className="mb-3 text-lg font-semibold">Kiruvchi so&apos;rovlar</h2>
-        {requests.length === 0 ? (
-          <Card className="surface-card border-0 bg-transparent">
-            <CardContent className="py-12 text-center">
-              <Clock className="mx-auto mb-3 h-10 w-10 text-slate-500" />
-              <p className="font-medium text-slate-200">Hozircha yangi so&apos;rovlar yo&apos;q</p>
-              <p className="mt-1 text-sm text-slate-500">
-                Sizning hududingizdan so&apos;rovlar kelganda shu yerda ko&apos;rinadi
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {requests.map((req) => (
-              <RequestCard
-                key={req.id}
-                id={req.id}
-                title={req.title}
-                description={req.description}
-                categoryNameUz={req.category.nameUz}
-                categoryIcon={req.category.icon}
-                urgency={req.urgency}
-                status={req.status}
-                customerPhone={req.customerPhone}
-                address={req.address ?? ""}
-                city={req.city}
-                createdAt={req.createdAt}
-              />
-            ))}
-          </div>
-        )}
+        <DashboardRequestList initial={requests} />
       </div>
 
       {/* Recent reviews */}

@@ -19,6 +19,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         isVerified: true,
         rating: true,
         reviewCount: true,
+        latitude: true,
+        longitude: true,
         createdAt: true,
         categories: { include: { category: { select: { id: true, nameUz: true, icon: true } } } },
         reviews: {
@@ -53,11 +55,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Ma'lumotlar noto'g'ri", details: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
 
-    const { fullName, phone, bio, serviceArea } = parsed.data
+    const { fullName, phone, bio, serviceArea, pricing, profilePhoto, latitude, longitude } = parsed.data
 
     const updated = await prisma.master.update({
       where: { id },
-      data: { fullName, phone, bio, serviceArea },
+      data: {
+        fullName,
+        phone,
+        serviceArea,
+        bio: [bio, pricing ? `Narxlar: ${pricing}` : ""].filter(Boolean).join("\n") || null,
+        ...(profilePhoto ? { profilePhoto } : {}),
+        ...(latitude !== undefined ? { latitude } : {}),
+        ...(longitude !== undefined ? { longitude } : {}),
+      },
     })
 
     return NextResponse.json({ success: true, master: { id: updated.id, fullName: updated.fullName } })

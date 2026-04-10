@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { auth, signOut } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Star, CheckCircle, Clock, Briefcase } from "lucide-react"
@@ -18,7 +18,10 @@ export default async function DashboardPage() {
       reviews: { orderBy: { createdAt: "desc" }, take: 5 },
     },
   })
-  if (!master) redirect("/auth/login")
+  if (!master) {
+    await signOut({ redirectTo: "/auth/login" })
+    return null
+  }
 
   // Fetch matched/accepted requests for this master's categories and city
   const categoryIds = master.categories.map((c) => c.categoryId)

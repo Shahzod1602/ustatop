@@ -1,27 +1,17 @@
 /**
  * Lightweight auth config — safe for Edge Runtime (used in middleware).
  * Does NOT import Prisma or bcryptjs.
+ * Role-based protection is handled entirely in middleware.ts
  */
 import type { NextAuthConfig } from "next-auth"
 
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: { signIn: "/auth/login", error: "/auth/error" },
-  providers: [], // Providers added in auth.ts (Node.js runtime only)
+  providers: [],
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user
-      const role = (auth?.user as { role?: string })?.role
-
-      if (nextUrl.pathname.startsWith("/dashboard")) {
-        return isLoggedIn && role === "MASTER"
-      }
-      if (
-        nextUrl.pathname.startsWith("/admin") &&
-        nextUrl.pathname !== "/admin/login"
-      ) {
-        return isLoggedIn && role === "ADMIN"
-      }
+    // Always allow — middleware.ts handles role-based protection
+    authorized() {
       return true
     },
   },

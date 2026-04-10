@@ -150,10 +150,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { id: token.id as string },
           select: { isVerified: true, fullName: true },
         })
-        if (master) {
-          token.isVerified = master.isVerified
-          token.name = master.fullName
+        if (!master) {
+          // Master was deleted — invalidate token so they can log in fresh
+          token.role = undefined
+          return token
         }
+        token.isVerified = master.isVerified
+        token.name = master.fullName
       }
       return token
     },

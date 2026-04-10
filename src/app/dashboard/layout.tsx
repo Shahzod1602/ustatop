@@ -19,7 +19,11 @@ async function SignOutButton() {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "MASTER") redirect("/auth/login")
+  if (!session?.user) redirect("/auth/login")
+  if (session.user.role !== "MASTER") {
+    // Non-master tried to access dashboard (e.g. CUSTOMER) — send to home
+    redirect("/")
+  }
 
   const initials = session.user.name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) ?? "U"
 

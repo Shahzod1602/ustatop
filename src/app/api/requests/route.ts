@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { serviceRequestSchema } from "@/lib/validations"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/get-user"
 import { checkRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
+    const user = await getUser()
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-    const rateKey = `new-request:${session?.user?.id ?? ip}`
+    const rateKey = `new-request:${user?.id ?? ip}`
     const rl = checkRateLimit(rateKey, 10, 60_000)
     if (!rl.ok) {
       return NextResponse.json({ error: "Juda ko'p so'rov. Birozdan keyin urinib ko'ring." }, { status: 429 })
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data
 
-    const customerName = data.customerName?.trim() || session?.user?.name || "Mijoz"
+    const customerName = data.customerName?.trim() || user?.name || "Mijoz"
     const customerPhone = data.customerPhone?.trim()
     if (!customerPhone) {
       return NextResponse.json({ error: "Telefon raqam topilmadi. Account bo'limida raqamni kiriting." }, { status: 400 })

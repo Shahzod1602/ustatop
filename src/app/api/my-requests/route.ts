@@ -1,26 +1,26 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/get-user"
 
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user) {
+    const user = await getUser()
+    if (!user) {
       return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
     }
 
     // Find requests by customer phone
     let phone: string | null = null
 
-    if (session.user.role === "CUSTOMER") {
+    if (user.role === "CUSTOMER") {
       const customer = await prisma.webCustomer.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: { phone: true },
       })
       phone = customer?.phone ?? null
-    } else if (session.user.role === "MASTER") {
+    } else if (user.role === "MASTER") {
       const master = await prisma.master.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: { phone: true },
       })
       phone = master?.phone ?? null

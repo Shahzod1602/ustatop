@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/get-user"
 
 const validStatuses = ["ACCEPTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const
 
@@ -18,8 +18,8 @@ function canTransition(current: string, next: string) {
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await auth()
-    if (!session?.user) {
+    const user = await getUser()
+    if (!user) {
       return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
     }
 
@@ -51,14 +51,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Status o'zgarishi noto'g'ri" }, { status: 400 })
     }
 
-    const isAdmin = session.user.role === "ADMIN"
-    const isMaster = session.user.role === "MASTER"
+    const isAdmin = user.role === "ADMIN"
+    const isMaster = user.role === "MASTER"
 
     const updateData: { status: (typeof validStatuses)[number]; masterId?: string } = { status }
 
     if (isMaster) {
       const master = await prisma.master.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: {
           id: true,
           isActive: true,
@@ -77,12 +77,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (!hasCategory || !servesCity) {
           return NextResponse.json({ error: "Bu so'rov sizga mos emas" }, { status: 403 })
         }
-        if (request.masterId && request.masterId !== session.user.id) {
+        if (request.masterId && request.masterId !== user.id) {
           return NextResponse.json({ error: "So'rov boshqa usta tomonidan qabul qilingan" }, { status: 409 })
         }
-        updateData.masterId = session.user.id
+        updateData.masterId = user.id
       } else {
-        if (request.masterId !== session.user.id) {
+        if (request.masterId !== user.id) {
           return NextResponse.json({ error: "Faqat biriktirilgan usta statusni o'zgartira oladi" }, { status: 403 })
         }
       }
@@ -102,7 +102,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         where: {
           id,
           status: { in: ["PENDING", "MATCHED"] },
-          OR: [{ masterId: null }, { masterId: session.user.id }],
+          OR: [{ masterId: null }, { masterId: user.id }],
         },
         data: updateData,
       })

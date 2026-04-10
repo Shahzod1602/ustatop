@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/get-user"
 import { masterPostSchema } from "@/lib/validations"
 
 export async function GET(req: NextRequest) {
@@ -10,9 +10,9 @@ export async function GET(req: NextRequest) {
     let resolvedMasterId = masterId
 
     if (!resolvedMasterId) {
-      const session = await auth()
-      if (session?.user?.role === "MASTER") {
-        resolvedMasterId = session.user.id
+      const user = await getUser()
+      if (user?.role === "MASTER") {
+        resolvedMasterId = user.id
       }
     }
 
@@ -42,13 +42,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user || session.user.role !== "MASTER") {
+    const user = await getUser()
+    if (!user || user.role !== "MASTER") {
       return NextResponse.json({ error: "Usta sifatida kirish kerak" }, { status: 401 })
     }
 
     const master = await prisma.master.findUnique({
-      where: { id: session.user.id, isActive: true },
+      where: { id: user.id, isActive: true },
       select: { id: true },
     })
     if (!master) {

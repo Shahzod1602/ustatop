@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/get-user"
 import { customerProfileSchema } from "@/lib/validations"
 
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user) {
+    const user = await getUser()
+    if (!user) {
       return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
     }
 
-    const role = session.user.role
+    const role = user.role
 
     if (role === "MASTER") {
       const master = await prisma.master.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: { id: true, fullName: true, phone: true, serviceArea: true, bio: true },
       })
       return NextResponse.json({
         profile: {
-          fullName: master?.fullName ?? session.user.name ?? "",
+          fullName: master?.fullName ?? user.name ?? "",
           phone: master?.phone ?? "",
           city: master?.serviceArea ?? "Toshkent",
           isMaster: true,
@@ -29,12 +29,12 @@ export async function GET() {
 
     if (role === "CUSTOMER") {
       const customer = await prisma.webCustomer.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: { id: true, fullName: true, phone: true },
       })
       return NextResponse.json({
         profile: {
-          fullName: customer?.fullName ?? session.user.name ?? "",
+          fullName: customer?.fullName ?? user.name ?? "",
           phone: customer?.phone ?? "",
           city: "Toshkent",
           isMaster: false,
@@ -44,7 +44,7 @@ export async function GET() {
 
     return NextResponse.json({
       profile: {
-        fullName: session.user.name ?? "",
+        fullName: user.name ?? "",
         phone: "",
         city: "Toshkent",
         isMaster: false,
@@ -58,8 +58,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user) {
+    const user = await getUser()
+    if (!user) {
       return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
     }
 
@@ -76,17 +76,17 @@ export async function POST(req: NextRequest) {
     const phone = parsed.data.phone?.trim() || null
     const city = parsed.data.city?.trim() || "Toshkent"
 
-    if (session.user.role === "MASTER") {
+    if (user.role === "MASTER") {
       const profile = await prisma.master.update({
-        where: { id: session.user.id },
+        where: { id: user.id },
         data: { fullName, phone: phone ?? undefined, serviceArea: city },
       })
       return NextResponse.json({ success: true, profile })
     }
 
-    if (session.user.role === "CUSTOMER") {
+    if (user.role === "CUSTOMER") {
       const profile = await prisma.webCustomer.update({
-        where: { id: session.user.id },
+        where: { id: user.id },
         data: { fullName, phone: phone ?? undefined },
       })
       return NextResponse.json({ success: true, profile })

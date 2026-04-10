@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/get-user"
 import { masterProfileSchema } from "@/lib/validations"
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -39,13 +39,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await auth()
-    if (!session?.user) return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
+    const user = await getUser()
+    if (!user) return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
 
     const { id } = await params
 
     // Only the master themselves or admin can update
-    if (session.user.id !== id && session.user.role !== "ADMIN") {
+    if (user.id !== id && user.role !== "ADMIN") {
       return NextResponse.json({ error: "Ruxsat yo'q" }, { status: 403 })
     }
 

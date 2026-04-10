@@ -40,9 +40,9 @@ export function DashboardRequestList({ initial }: { initial: Req[] }) {
 
   if (requests.length === 0) {
     return (
-      <div className="surface-card border-0 bg-transparent py-12 text-center">
-        <p className="font-medium text-slate-200">Hozircha yangi so&apos;rovlar yo&apos;q</p>
-        <p className="mt-1 text-sm text-slate-500">
+      <div className="rounded-2xl bg-white py-12 text-center shadow-sm">
+        <p className="font-medium text-gray-700">Hozircha yangi so&apos;rovlar yo&apos;q</p>
+        <p className="mt-1 text-sm text-gray-400">
           Sizning hududingizdan so&apos;rovlar kelganda shu yerda ko&apos;rinadi
         </p>
       </div>

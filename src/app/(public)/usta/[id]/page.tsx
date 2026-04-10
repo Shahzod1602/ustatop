@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, MapPin, Phone, Star, ShieldCheck, BadgeCheck, CheckCircle2, Briefcase, MessageSquare } from "lucide-react"
+import { ArrowLeft, MapPin, Phone, Star, ShieldCheck, Share2, Bookmark, CheckCircle2, Briefcase, MessageSquare } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
@@ -41,13 +41,13 @@ export default async function MasterProfilePage({ params }: { params: Promise<{ 
 
   if (!master) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f0ede8] p-6 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#faf8f5] p-6 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
           <ShieldCheck className="h-8 w-8 text-[#c0b8b0]" />
         </div>
-        <p className="mb-1 text-lg font-black text-[#1a1a1a]">Usta topilmadi</p>
-        <p className="mb-4 text-sm text-[#8c8c8c]">Ushbu profil mavjud emas yoki o'chirilgan.</p>
-        <Link href="/ustalar" className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#ff6b2b] px-5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20]">
+        <p className="mb-1 text-lg font-extrabold text-[#1a1a1a]">Usta topilmadi</p>
+        <p className="mb-5 text-sm text-[#8c8c8c]">Ushbu profil mavjud emas yoki o&apos;chirilgan.</p>
+        <Link href="/ustalar" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#ff6b2b] px-6 text-sm font-bold text-white shadow-[0_4px_14px_rgba(255,107,43,0.3)] transition hover:bg-[#e85d20]">
           <ArrowLeft className="h-4 w-4" />
           Orqaga
         </Link>
@@ -61,174 +61,190 @@ export default async function MasterProfilePage({ params }: { params: Promise<{ 
     : master.rating.toFixed(1)
 
   return (
-    <div className="min-h-screen bg-[#f0ede8] pb-4 text-[#1a1a1a]">
+    <div className="min-h-screen bg-[#faf8f5] pb-28 text-[#1a1a1a]">
 
-      {/* Header */}
-      <header className="relative overflow-hidden bg-[#1a1a2e] px-3 pt-safe pb-4">
-        <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[#ff6b2b]/15" />
-        <div className="relative flex items-center gap-3">
-          <Link href="/ustalar" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20">
-            <ArrowLeft className="h-4 w-4" />
+      {/* Hero Image / Photo */}
+      <div className="relative">
+        {master.profilePhoto ? (
+          <div className="relative h-[55vh] w-full overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={master.profilePhoto}
+              alt={master.fullName}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+          </div>
+        ) : (
+          <div
+            className="relative flex h-[55vh] w-full items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${palette.bg}, ${palette.bg}dd)` }}
+          >
+            <span className="text-[80px] font-extrabold" style={{ color: palette.text }}>
+              {initials(master.fullName)}
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
+          </div>
+        )}
+
+        {/* Top navigation overlay */}
+        <div className="absolute left-0 right-0 top-0 flex items-center justify-between px-4 pt-safe pt-4">
+          <Link
+            href="/ustalar"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#1a1a1a] shadow-lg backdrop-blur-sm transition hover:bg-white"
+          >
+            <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div>
-            <h1 className="text-[17px] font-black leading-tight text-white">Usta profili</h1>
-            <p className="text-[11px] text-white/50">Ishonch va tajribani ko'ring</p>
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#1a1a1a] shadow-lg backdrop-blur-sm transition hover:bg-white">
+            <Share2 className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Profile Card (overlapping hero) */}
+      <div className="-mt-8 relative z-10 mx-4 rounded-2xl bg-white p-5 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
+        {/* Name + PRO badge */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-[22px] font-extrabold leading-tight text-[#1a1a1a]">{master.fullName}</h1>
+            <div className="mt-1.5 flex items-center gap-2">
+              <Star className="h-4 w-4 fill-[#f59e0b] text-[#f59e0b]" />
+              <span className="text-[15px] font-bold text-[#1a1a1a]">{avgRating}</span>
+              <span className="text-[12px] font-semibold uppercase tracking-wide text-[#8c8c8c]">
+                ({master.reviewCount} sharhlar)
+              </span>
+            </div>
+          </div>
+          {master.isVerified && (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-[0_2px_8px_rgba(20,184,166,0.4)]">
+              <CheckCircle2 className="h-5 w-5 text-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Category chips */}
+        {master.categories.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {master.categories.map((c) => (
+              <span
+                key={c.id}
+                className="rounded-full border border-[#e0dbd4] px-3.5 py-1.5 text-[12px] font-semibold text-[#5a5a5a]"
+              >
+                {c.category.icon} {c.category.nameUz}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Bio */}
+        {master.bio && (
+          <p className="mt-4 text-[14px] leading-relaxed text-[#6a6460]">{master.bio}</p>
+        )}
+
+        {/* Service area */}
+        <div className="mt-4 rounded-xl bg-[#f5f2ee] p-3.5">
+          <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-[#8c8c8c]">
+            Xizmat ko&apos;rsatish hududi
+          </p>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-[#ff6b2b]" />
+            <span className="text-[14px] font-semibold text-[#1a1a1a]">{master.serviceArea}</span>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="fade-up space-y-3 px-3 pt-3">
+      {/* Posts */}
+      <section className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+        <div className="mb-4 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-50">
+            <Briefcase className="h-4 w-4 text-[#ff6b2b]" />
+          </div>
+          <h2 className="text-[17px] font-extrabold text-[#1a1a1a]">Ish namunalari</h2>
+          {master.posts.length > 0 && (
+            <span className="ml-auto rounded-full bg-[#f5f2ee] px-2.5 py-0.5 text-[11px] font-bold text-[#8c8c8c]">
+              {master.posts.length} ta
+            </span>
+          )}
+        </div>
 
-        {/* Profile Card */}
-        <section className="rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-          <div className="flex items-start gap-3">
-            {/* Avatar */}
-            <div
-              className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl text-xl font-black shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
-              style={{ background: palette.bg, color: palette.text }}
-            >
-              {master.profilePhoto ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={master.profilePhoto} alt={master.fullName} className="h-[68px] w-[68px] rounded-2xl object-cover" />
-              ) : (
-                initials(master.fullName)
-              )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[18px] font-black leading-tight text-[#1a1a1a]">{master.fullName}</p>
-                {master.isVerified && (
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                    <CheckCircle2 className="h-2.5 w-2.5" />
-                    Tasdiqlangan
-                  </span>
+        {master.posts.length === 0 ? (
+          <div className="rounded-xl bg-[#f5f2ee] p-5 text-center">
+            <p className="text-sm text-[#8c8c8c]">Hozircha ish namunalari yo&apos;q.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {master.posts.map((post) => (
+              <article key={post.id} className="overflow-hidden rounded-xl border border-[#ede8e0]">
+                {post.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={post.imageUrl} alt={post.title} className="h-48 w-full object-cover" />
                 )}
-              </div>
-
-              <div className="mt-1.5 flex items-center gap-1.5">
-                <div className="flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5">
-                  <Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" />
-                  <span className="text-[13px] font-black text-[#1a1a1a]">{avgRating}</span>
+                <div className="p-3.5">
+                  <p className="text-[14px] font-bold text-[#1a1a1a]">{post.title}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-[#8c8c8c]">{post.content}</p>
                 </div>
-                <span className="text-[11px] text-[#8c8c8c]">{master.reviewCount} sharh</span>
-              </div>
-
-              <div className="mt-2 flex items-center gap-1 text-[11px] text-[#8c8c8c]">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                {master.serviceArea}
-              </div>
-            </div>
+              </article>
+            ))}
           </div>
+        )}
+      </section>
 
-          {/* Categories */}
-          {master.categories.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {master.categories.map((c) => (
-                <span key={c.id} className="inline-flex items-center gap-1 rounded-lg border border-[#ede8e0] bg-[#faf8f5] px-2.5 py-1 text-[11px] font-semibold text-[#5a5a5a]">
-                  {c.category.icon} {c.category.nameUz}
-                </span>
-              ))}
-            </div>
+      {/* Reviews */}
+      <section className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+        <div className="mb-4 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50">
+            <MessageSquare className="h-4 w-4 text-[#f59e0b]" />
+          </div>
+          <h2 className="text-[17px] font-extrabold text-[#1a1a1a]">Sharhlar</h2>
+          {master.reviews.length > 0 && (
+            <span className="ml-auto rounded-full bg-[#f5f2ee] px-2.5 py-0.5 text-[11px] font-bold text-[#8c8c8c]">
+              {master.reviews.length} ta
+            </span>
           )}
+        </div>
 
-          {/* Bio */}
-          {master.bio && (
-            <div className="mt-3 rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-3">
-              <p className="text-[13px] leading-relaxed text-[#5a5a5a]">{master.bio}</p>
-            </div>
-          )}
-
-          {/* CTA */}
-          <div className="mt-4">
-            <a
-              href={`tel:${master.phone}`}
-              className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#ff6b2b] text-[15px] font-bold text-white shadow-[0_4px_16px_rgba(255,107,43,0.32)] transition hover:bg-[#e85d20] active:translate-y-[1px]"
-            >
-              <Phone className="h-5 w-5" />
-              Qo'ng'iroq qilish
-            </a>
+        {master.reviews.length === 0 ? (
+          <div className="rounded-xl bg-[#f5f2ee] p-5 text-center">
+            <p className="text-sm text-[#8c8c8c]">Hozircha sharhlar yo&apos;q.</p>
           </div>
-        </section>
-
-        {/* Posts */}
-        <section className="rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50">
-              <Briefcase className="h-3.5 w-3.5 text-[#ff6b2b]" />
-            </div>
-            <h2 className="text-[16px] font-black text-[#1a1a1a]">Ish namunalari</h2>
-            {master.posts.length > 0 && (
-              <span className="ml-auto rounded-lg bg-[#f0ede8] px-2 py-0.5 text-[11px] font-bold text-[#8c8c8c]">
-                {master.posts.length} ta
-              </span>
-            )}
-          </div>
-
-          {master.posts.length === 0 ? (
-            <div className="rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-4 text-center">
-              <p className="text-sm text-[#8c8c8c]">Hozircha ish namunalari yo'q.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {master.posts.map((post) => (
-                <article key={post.id} className="overflow-hidden rounded-xl border border-[#ede8e0] bg-[#faf8f5]">
-                  {post.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={post.imageUrl} alt={post.title} className="h-44 w-full object-cover" />
-                  )}
-                  <div className="p-3">
-                    <p className="text-[14px] font-bold text-[#1a1a1a]">{post.title}</p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-[#8c8c8c]">{post.content}</p>
+        ) : (
+          <div className="space-y-3">
+            {master.reviews.map((review) => (
+              <article key={review.id} className="rounded-xl bg-[#f5f2ee] p-4">
+                <div className="mb-2 flex items-center gap-1.5">
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3.5 w-3.5 ${i < review.rating ? "fill-[#f59e0b] text-[#f59e0b]" : "fill-[#ddd8d0] text-[#ddd8d0]"}`}
+                      />
+                    ))}
                   </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Reviews */}
-        <section className="rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
-              <MessageSquare className="h-3.5 w-3.5 text-[#f59e0b]" />
-            </div>
-            <h2 className="text-[16px] font-black text-[#1a1a1a]">Sharhlar</h2>
-            {master.reviews.length > 0 && (
-              <span className="ml-auto rounded-lg bg-[#f0ede8] px-2 py-0.5 text-[11px] font-bold text-[#8c8c8c]">
-                {master.reviews.length} ta
-              </span>
-            )}
+                  <span className="ml-1 text-[12px] font-bold text-[#6a6460]">{review.rating}/5</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-[#5a5a5a]">
+                  {review.comment || "Izoh qoldirilmagan"}
+                </p>
+              </article>
+            ))}
           </div>
+        )}
+      </section>
 
-          {master.reviews.length === 0 ? (
-            <div className="rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-4 text-center">
-              <p className="text-sm text-[#8c8c8c]">Hozircha sharhlar yo'q.</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {master.reviews.map((review) => (
-                <article key={review.id} className="rounded-xl border border-[#ede8e0] bg-[#faf8f5] p-3">
-                  <div className="mb-1.5 flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${i < review.rating ? "fill-[#f59e0b] text-[#f59e0b]" : "fill-[#e0d8d0] text-[#e0d8d0]"}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[11px] font-bold text-[#8c8c8c]">{review.rating}/5</span>
-                    <BadgeCheck className="ml-auto h-4 w-4 text-emerald-500" />
-                  </div>
-                  <p className="text-[13px] leading-relaxed text-[#5a5a5a]">
-                    {review.comment || "Izoh qoldirilmagan"}
-                  </p>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+      {/* Fixed bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#ede8e0] bg-white/95 px-5 py-3 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <a
+            href={`tel:${master.phone}`}
+            className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6b2b] text-[15px] font-bold uppercase tracking-wide text-white shadow-[0_4px_16px_rgba(255,107,43,0.35)] transition hover:bg-[#e85d20] active:scale-[0.98]"
+          >
+            <Phone className="h-5 w-5" />
+            Bog&apos;lanish
+          </a>
+          <button className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-[#e0dbd4] bg-white text-[#8c8c8c] transition hover:border-[#ff6b2b] hover:text-[#ff6b2b]">
+            <Bookmark className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     </div>
   )

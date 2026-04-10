@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import Link from "next/link"
-import { Navigation, X, Star, Phone, ChevronRight, Loader2, MapPin } from "lucide-react"
+import { Navigation, X, Star, Phone, ChevronRight, Loader2, Menu, User } from "lucide-react"
 
 interface NearbyMaster {
   id: string
@@ -18,6 +18,13 @@ interface NearbyMaster {
   longitude: number
   distance: number
   categories: { category: { nameUz: string; icon: string } }[]
+}
+
+interface Category {
+  id: string
+  nameUz: string
+  icon: string
+  slug: string
 }
 
 const RADIUS_KM = 7
@@ -43,6 +50,16 @@ export default function XaritaPage() {
   const [locating, setLocating] = useState(false)
   const [locError, setLocError] = useState("")
   const [mapReady, setMapReady] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [activeFilter, setActiveFilter] = useState<string>("all")
+
+  // Fetch categories for filter chips
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data: Category[]) => setCategories(data))
+      .catch(() => setCategories([]))
+  }, [])
 
   // ── Bootstrap Leaflet (client-only) ──────────────────────────
   useEffect(() => {
@@ -66,6 +83,7 @@ export default function XaritaPage() {
         zoomControl: false,
       })
 
+      // Warm-tinted map tiles
       L.default.tileLayer(
         "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         {
@@ -98,6 +116,11 @@ export default function XaritaPage() {
     }
   }, [])
 
+  // Filter masters by category
+  const filteredMasters = activeFilter === "all"
+    ? masters
+    : masters.filter((m) => m.categories.some((c) => c.category.nameUz === activeFilter))
+
   // ── Place markers on map ──────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !leafletRef.current) return
@@ -108,22 +131,37 @@ export default function XaritaPage() {
     masterMarkersRef.current.forEach((m) => m.remove())
     masterMarkersRef.current = []
 
-    masters.forEach((master) => {
+    filteredMasters.forEach((master) => {
+      const emoji = master.categories[0]?.category.icon ?? "🔧"
+      const name = master.fullName.split(" ")[0]?.toUpperCase() ?? ""
       const icon = L.divIcon({
         className: "",
-        html: `<div style="
-          background:#1a1a2e;
-          color:#F5C842;
-          border:2px solid #F5C842;
-          border-radius:50%;
-          width:36px;height:36px;
-          display:flex;align-items:center;justify-content:center;
-          font-size:16px;
-          box-shadow:0 2px 8px rgba(0,0,0,0.35);
-          cursor:pointer;
-        ">${master.categories[0]?.category.icon ?? "🔧"}</div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
+        html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <div style="
+            background:linear-gradient(135deg, #c2703a, #8B4513);
+            color:#fff;
+            border:2.5px solid #fff;
+            border-radius:50%;
+            width:42px;height:42px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:18px;
+            box-shadow:0 3px 12px rgba(139,69,19,0.4);
+            cursor:pointer;
+          ">${emoji}</div>
+          <div style="
+            background:rgba(139,69,19,0.85);
+            color:#fff;
+            font-size:8px;
+            font-weight:800;
+            padding:1px 5px;
+            border-radius:4px;
+            white-space:nowrap;
+            letter-spacing:0.5px;
+            font-family:system-ui,sans-serif;
+          ">${name}</div>
+        </div>`,
+        iconSize: [60, 56],
+        iconAnchor: [30, 28],
       })
 
       const marker = L.marker([master.latitude, master.longitude], { icon })
@@ -132,7 +170,7 @@ export default function XaritaPage() {
 
       masterMarkersRef.current.push(marker)
     })
-  }, [masters, mapReady])
+  }, [filteredMasters, mapReady])
 
   // ── Update user position on map ───────────────────────────────
   useEffect(() => {
@@ -148,15 +186,15 @@ export default function XaritaPage() {
     const meIcon = L.divIcon({
       className: "",
       html: `<div style="
-        background:#16a34a;
+        background:linear-gradient(135deg, #f97316, #ea580c);
         color:#fff;
         border:2.5px solid #fff;
         border-radius:50px;
-        padding:4px 9px;
+        padding:5px 12px;
         font-size:11px;
         font-weight:800;
-        font-family:Manrope,sans-serif;
-        box-shadow:0 2px 10px rgba(0,0,0,0.3);
+        font-family:system-ui,sans-serif;
+        box-shadow:0 3px 12px rgba(249,115,22,0.4);
         white-space:nowrap;
       ">men</div>`,
       iconSize: [44, 28],
@@ -168,9 +206,9 @@ export default function XaritaPage() {
     // Radius circle
     circleRef.current = L.circle(userPos, {
       radius: RADIUS_KM * 1000,
-      color: "#3B6FE8",
-      fillColor: "#3B6FE8",
-      fillOpacity: 0.08,
+      color: "#f97316",
+      fillColor: "#f97316",
+      fillOpacity: 0.06,
       weight: 2,
     }).addTo(map)
 
@@ -207,31 +245,52 @@ export default function XaritaPage() {
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       />
 
-      {/* ── Top bar ── */}
-      <div className="absolute left-0 right-0 top-0 z-[500] flex items-center gap-2 px-3 pt-3">
-        <div className="flex flex-1 items-center gap-2 rounded-2xl bg-white px-3 py-2.5 shadow-md">
-          <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500" />
-          <span className="text-[13px] font-semibold text-gray-700">
-            {userPos
-              ? `${masters.length} usta topildi (${RADIUS_KM} km)`
-              : "Yaqin ustalarni toping"}
-          </span>
+      {/* ── Top bar with hamburger + avatar ── */}
+      <div className="absolute left-0 right-0 top-0 z-[500] px-3 pt-3">
+        <div className="flex items-center justify-between">
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md">
+            <Menu className="h-5 w-5 text-gray-700" />
+          </button>
+          <Link href="/account" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md">
+            <User className="h-5 w-5 text-gray-700" />
+          </Link>
+        </div>
+
+        {/* ── Category filter chips ── */}
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={`flex-shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-all ${
+              activeFilter === "all"
+                ? "bg-orange-500 text-white shadow-md shadow-orange-500/25"
+                : "bg-white text-gray-600 shadow-md hover:bg-gray-50"
+            }`}
+          >
+            Hammasi
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveFilter(cat.nameUz)}
+              className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                activeFilter === cat.nameUz
+                  ? "bg-orange-500 text-white shadow-md shadow-orange-500/25"
+                  : "bg-white text-gray-600 shadow-md hover:bg-gray-50"
+              }`}
+            >
+              <span>{cat.icon}</span>
+              {cat.nameUz}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* ── Map container ── */}
       <div ref={mapRef} className="h-full w-full" />
 
-      {/* ── Master count badge ── */}
-      {masters.length > 0 && (
-        <div className="absolute right-3 top-16 z-[500] rounded-2xl bg-white px-3 py-1.5 shadow-md">
-          <span className="text-[12px] font-bold text-gray-800">{masters.length} usta</span>
-        </div>
-      )}
-
       {/* ── Error ── */}
       {locError && (
-        <div className="absolute left-3 right-3 top-[60px] z-[500] rounded-2xl bg-red-50 px-4 py-3 shadow-md">
+        <div className="absolute left-3 right-3 top-[120px] z-[500] rounded-2xl bg-red-50 px-4 py-3 shadow-md">
           <p className="text-[12px] font-medium text-red-600">{locError}</p>
         </div>
       )}
@@ -239,86 +298,84 @@ export default function XaritaPage() {
       {/* ── Selected master card ── */}
       {selected && (
         <div className="absolute bottom-24 left-3 right-3 z-[500]">
-          <div className="rounded-2xl bg-white p-4 shadow-xl ring-1 ring-black/5">
+          <div className="rounded-3xl bg-white p-4 shadow-xl">
             <button
               onClick={() => setSelected(null)}
-              className="absolute right-3 top-3 rounded-full bg-gray-100 p-1 text-gray-500 hover:bg-gray-200"
+              className="absolute right-4 top-4 rounded-full bg-gray-100 p-1.5 text-gray-400 hover:bg-gray-200"
             >
               <X className="h-4 w-4" />
             </button>
 
             <div className="flex items-start gap-3">
-              {/* Avatar */}
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-2xl">
-                {selected.categories[0]?.category.icon ?? "🔧"}
+              {/* Avatar / Photo */}
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50">
+                {selected.profilePhoto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selected.profilePhoto} alt={selected.fullName} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-2xl">{selected.categories[0]?.category.icon ?? "🔧"}</span>
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-[14px] font-extrabold text-gray-900">
-                    {selected.fullName}
-                  </p>
+                <p className="truncate text-base font-extrabold text-gray-900">
+                  {selected.fullName}
+                </p>
+
+                {/* Rating */}
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-sm font-bold text-gray-800">
+                    {selected.rating.toFixed(1)}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    ({selected.reviewCount} baho)
+                  </span>
                   {selected.isVerified && (
-                    <span className="flex-shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
-                      ✓ Tasdiqlangan
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      Tasdiqlangan
                     </span>
                   )}
                 </div>
 
                 {/* Categories */}
-                <p className="mt-0.5 text-[11px] text-gray-500">
-                  {selected.categories.map((c) => c.category.nameUz).join(" · ")}
+                <p className="mt-1 text-xs text-gray-500">
+                  {selected.categories.map((c) => c.category.nameUz).join(" va ")}
                 </p>
 
-                {/* Rating + distance */}
-                <div className="mt-1.5 flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                    <span className="text-[12px] font-bold text-gray-800">
-                      {selected.rating.toFixed(1)}
-                    </span>
-                    <span className="text-[11px] text-gray-400">
-                      ({selected.reviewCount})
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-blue-600">
-                    {selected.distance.toFixed(1)} km uzoqlikda
-                  </span>
-                </div>
-
                 {selected.bio && (
-                  <p className="mt-1 line-clamp-2 text-[11px] text-gray-500">{selected.bio}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-gray-400">{selected.bio}</p>
                 )}
               </div>
             </div>
 
             {/* Action buttons */}
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex gap-3">
               <a
                 href={`tel:${selected.phone}`}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gray-900 py-2.5 text-[13px] font-bold text-white"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-400 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:shadow-orange-500/40"
               >
-                <Phone className="h-3.5 w-3.5" />
-                Qo&apos;ng&apos;iroq
+                <Phone className="h-4 w-4" />
+                Bog&apos;lanish
               </a>
               <Link
                 href={`/usta/${selected.id}`}
-                className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white py-2.5 text-[13px] font-semibold text-gray-800"
+                className="flex flex-1 items-center justify-center gap-1 rounded-full border-2 border-gray-200 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50"
               >
                 Profil
-                <ChevronRight className="h-3.5 w-3.5" />
+                <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Menga yaqin button ── */}
+      {/* ── Locate me button ── */}
       <div className="absolute bottom-6 left-0 right-0 z-[500] flex justify-center px-6">
         <button
           onClick={locateMe}
           disabled={locating}
-          className="flex items-center gap-2.5 rounded-2xl bg-gray-900 px-7 py-3.5 text-[14px] font-bold text-white shadow-xl transition-all active:scale-95 disabled:opacity-60"
+          className="flex items-center gap-2.5 rounded-full bg-gradient-to-r from-orange-500 to-orange-400 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-orange-500/30 transition-all active:scale-95 disabled:opacity-60"
         >
           {locating ? (
             <>

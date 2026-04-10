@@ -1,8 +1,8 @@
 import { auth, signOut } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { Star, CheckCircle, Clock, Briefcase } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import Link from "next/link"
+import { Star, CheckCircle, Briefcase, Monitor } from "lucide-react"
 import { DashboardRequestList } from "./_components/request-list"
 
 export const dynamic = "force-dynamic"
@@ -51,58 +51,96 @@ export default async function DashboardPage() {
     },
   })
 
-  const stats = [
-    { label: "Yangi so'rovlar", value: requests.filter((r) => r.status === "MATCHED").length, icon: Clock, tone: "from-amber-200 to-amber-400" },
-    { label: "Qabul qilingan", value: requests.filter((r) => r.status === "ACCEPTED").length, icon: Briefcase, tone: "from-cyan-200 to-cyan-400" },
-    { label: "Yakunlangan", value: completedCount, icon: CheckCircle, tone: "from-emerald-200 to-emerald-400" },
-    { label: "Reyting", value: master.rating.toFixed(1), icon: Star, tone: "from-orange-200 to-orange-400" },
-  ]
+  const activeCount = requests.filter((r) => r.status === "ACCEPTED" || r.status === "IN_PROGRESS").length
+  const newRequestsCount = requests.filter((r) => r.status === "MATCHED").length
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Greeting */}
       <div>
-        <h1 className="text-2xl heading-gradient">Xush kelibsiz, {master.fullName.split(" ")[0]}!</h1>
-        <p className="text-sm text-slate-400">Sizning ish oqimingiz va kiruvchi so'rovlar</p>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Xush kelibsiz, {master.fullName.split(" ")[0]}!
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Bugun sizni {newRequestsCount} ta yangi so&apos;rov kutmoqda.
+        </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon, tone }) => (
-          <Card key={label} className="surface-card border-0 bg-transparent">
-            <CardContent className="p-4">
-              <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-[#0b1220] ${tone}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-              <p className="text-2xl font-bold text-slate-100">{value}</p>
-              <p className="mt-0.5 text-xs text-slate-400">{label}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Stats Grid 2x2 */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Active Jobs */}
+        <div className="rounded-2xl bg-white p-4 shadow-sm">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+            <Briefcase className="h-5 w-5 text-blue-500" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
+          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            FAOL ISHLAR
+          </p>
+        </div>
+
+        {/* Completed */}
+        <div className="rounded-2xl bg-white p-4 shadow-sm">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+            <CheckCircle className="h-5 w-5 text-emerald-500" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{completedCount}</p>
+          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            YAKUNLANGAN
+          </p>
+        </div>
+
+        {/* Rating */}
+        <div className="rounded-2xl bg-white p-4 shadow-sm">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+            <Star className="h-5 w-5 text-amber-500" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{master.rating.toFixed(1)}</p>
+          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            O&apos;RTACHA REYTING
+          </p>
+        </div>
+
+        {/* Revenue - Orange highlight card */}
+        <div className="rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 p-4 shadow-sm">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+            <Monitor className="h-5 w-5 text-white" />
+          </div>
+          <p className="text-2xl font-bold text-white">8.4M</p>
+          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/80">
+            JAMI DAROMAD
+          </p>
+        </div>
       </div>
 
-      {/* Requests */}
+      {/* Requests Section */}
       <div>
-        <h2 className="mb-3 text-lg font-semibold">Kiruvchi so&apos;rovlar</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Yangi so&apos;rovlar</h2>
+          <Link href="/dashboard/requests" className="text-sm font-medium text-orange-500 hover:text-orange-600">
+            Hammasini ko&apos;rish
+          </Link>
+        </div>
         <DashboardRequestList initial={requests} />
       </div>
 
       {/* Recent reviews */}
       {master.reviews.length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-semibold">Oxirgi sharhlar</h2>
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">Oxirgi sharhlar</h2>
           <div className="space-y-3">
             {master.reviews.map((review) => (
-              <Card key={review.id} className="surface-card border-0 bg-transparent">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span key={i} className={i < review.rating ? "text-yellow-400" : "text-gray-300"}>★</span>
-                    ))}
-                    <span className="text-sm font-medium text-slate-200">{review.rating}/5</span>
-                  </div>
-                  {review.comment && <p className="text-sm text-slate-400">{review.comment}</p>}
-                </CardContent>
-              </Card>
+              <div key={review.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className={i < review.rating ? "text-amber-400" : "text-gray-200"}>
+                      ★
+                    </span>
+                  ))}
+                  <span className="text-sm font-medium text-gray-700">{review.rating}/5</span>
+                </div>
+                {review.comment && <p className="text-sm text-gray-500">{review.comment}</p>}
+              </div>
             ))}
           </div>
         </div>

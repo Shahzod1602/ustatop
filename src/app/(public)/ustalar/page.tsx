@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, Star, CheckCircle2, MapPin, Phone, Eye, Users, SlidersHorizontal } from "lucide-react"
+import { Star, MapPin, Users, SlidersHorizontal, LayoutGrid, Bookmark } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 type Params = Promise<{
@@ -73,7 +73,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
       bio: true,
       serviceArea: true,
       createdAt: true,
-      categories: { include: { category: true }, take: 1 },
+      categories: { include: { category: true }, take: 3 },
       _count: { select: { posts: true } },
     },
   })
@@ -104,7 +104,7 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
           bio: true,
           serviceArea: true,
           createdAt: true,
-          categories: { include: { category: true }, take: 1 },
+          categories: { include: { category: true }, take: 3 },
           _count: { select: { posts: true } },
         },
       })
@@ -116,91 +116,84 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
   }
 
   return (
-    <div className="min-h-screen bg-[#f0ede8] pb-4 text-[#1a1a1a]">
+    <div className="min-h-screen bg-[#faf8f5] pb-24 text-[#1a1a1a]">
 
       {/* Header */}
-      <header className="relative overflow-hidden bg-[#1a1a2e] px-3 pt-safe pb-4">
-        <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[#ff6b2b]/15" />
-        <div className="relative flex items-center gap-3">
-          <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="text-[17px] font-black leading-tight text-white">Ustalar ro'yxati</h1>
-            <p className="text-[11px] text-white/50">Reyting va tajriba bo'yicha tanlang</p>
-          </div>
-        </div>
+      <header className="px-5 pt-safe pb-2 pt-8">
+        <p className="text-xs font-bold uppercase tracking-widest text-[#ff6b2b]">Katalog</p>
+        <h1 className="mt-1 text-[26px] font-extrabold leading-tight text-[#1a1a1a]">
+          Eng sara ustalar sizning xizmatingizda
+        </h1>
+        <p className="mt-1 text-sm text-[#8c8c8c]">
+          <span className="font-bold text-[#ff6b2b]">{masters.length}</span> ta usta topildi
+        </p>
       </header>
 
-      {/* Search & Filter */}
-      <div className="fade-up mx-3 mb-3 mt-3 rounded-2xl border border-[#e0d8d0] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-[#ff6b2b]" />
-            <p className="text-[14px] font-black text-[#1a1a1a]">
-              <span className="text-[#ff6b2b]">{masters.length}</span> ta usta topildi
-            </p>
-          </div>
-          {(q || city || minRating || sort) && (
-            <Link href="/ustalar" className="rounded-lg border border-[#e0d8d0] bg-[#f7f4f0] px-2.5 py-1 text-[11px] font-bold text-[#8c8c8c] hover:border-[#ff6b2b]/30 hover:text-[#ff6b2b] transition-colors">
-              Tozalash
-            </Link>
-          )}
-        </div>
-
-        <form className="mb-3 grid grid-cols-1 gap-2">
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              name="q"
-              defaultValue={q ?? ""}
-              placeholder="Usta nomi..."
-              className="h-10 rounded-xl border border-[#ede8e0] bg-[#faf8f5] px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#b0a8a0] focus:border-[#ff6b2b] transition-colors"
-            />
-            <input
-              name="city"
-              defaultValue={city ?? ""}
-              placeholder="Shahar..."
-              className="h-10 rounded-xl border border-[#ede8e0] bg-[#faf8f5] px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#b0a8a0] focus:border-[#ff6b2b] transition-colors"
-            />
-          </div>
-          <button className="h-10 rounded-xl bg-[#ff6b2b] text-sm font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20] active:translate-y-[1px]">
-            Qidirish
+      {/* Search (hidden form) */}
+      <form className="px-5 pt-3">
+        <div className="flex gap-2">
+          <input
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Usta nomi..."
+            className="h-11 flex-1 rounded-full border border-[#e8e4de] bg-white px-4 text-sm text-[#1a1a1a] outline-none placeholder:text-[#b0a8a0] focus:border-[#ff6b2b] transition-colors shadow-sm"
+          />
+          <input
+            name="city"
+            defaultValue={city ?? ""}
+            placeholder="Shahar..."
+            className="h-11 w-28 rounded-full border border-[#e8e4de] bg-white px-4 text-sm text-[#1a1a1a] outline-none placeholder:text-[#b0a8a0] focus:border-[#ff6b2b] transition-colors shadow-sm"
+          />
+          <button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ff6b2b] text-white shadow-[0_4px_12px_rgba(255,107,43,0.3)] transition hover:bg-[#e85d20] active:scale-95">
+            <SlidersHorizontal className="h-4 w-4" />
           </button>
-        </form>
-
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: "Barchasi", href: `/ustalar${requestId ? `?requestId=${requestId}` : ""}`, active: !city && !minRating && !sort },
-            { label: "Reyting 4.5+", href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`, active: !!(minRating && minRating >= 4.5) },
-            { label: "Yangi", href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`, active: sort === "new" },
-          ].map(({ label, href, active }) => (
-            <Link
-              key={label}
-              href={href}
-              className={`rounded-xl border px-2 py-2 text-center text-[11px] font-bold transition-all ${
-                active
-                  ? "border-[#ff6b2b]/40 bg-orange-50 text-[#ff6b2b] shadow-[0_2px_8px_rgba(255,107,43,0.12)]"
-                  : "border-[#ede8e0] bg-[#faf8f5] text-[#8c8c8c] hover:border-[#ff6b2b]/20 hover:text-[#ff6b2b]"
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
         </div>
+      </form>
+
+      {/* Filter Chips */}
+      <div className="mt-4 flex items-center gap-2 overflow-x-auto px-5 pb-1 scrollbar-hide">
+        {[
+          { label: "Kategoriya", icon: <LayoutGrid className="h-3.5 w-3.5" />, href: `/ustalar${requestId ? `?requestId=${requestId}` : ""}`, active: !city && !minRating && !sort },
+          { label: "Shahar", icon: <MapPin className="h-3.5 w-3.5" />, href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}city=Toshkent`, active: !!city },
+          { label: "Reyting", icon: <Star className="h-3.5 w-3.5" />, href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}minRating=4.5`, active: !!(minRating && minRating >= 4.5) },
+          { label: "Yangi", icon: null, href: `/ustalar?${requestId ? `requestId=${requestId}&` : ""}sort=new`, active: sort === "new" },
+        ].map(({ label, icon, href, active }) => (
+          <Link
+            key={label}
+            href={href}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-semibold transition-all ${
+              active
+                ? "border-[#ff6b2b] bg-[#ff6b2b]/10 text-[#ff6b2b]"
+                : "border-[#e0dbd4] bg-white text-[#6a6460] hover:border-[#ff6b2b]/40 hover:text-[#ff6b2b]"
+            }`}
+          >
+            {icon}
+            {label}
+          </Link>
+        ))}
+
+        {(q || city || minRating || sort) && (
+          <Link
+            href="/ustalar"
+            className="inline-flex shrink-0 items-center rounded-full border border-red-200 bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-500 transition hover:bg-red-100"
+          >
+            Tozalash
+          </Link>
+        )}
       </div>
 
       {/* Masters List */}
-      <div className="fade-up stagger-1 space-y-2.5 px-3">
+      <div className="mt-4 space-y-3 px-5">
         {masters.length === 0 && (
-          <div className="rounded-2xl border border-[#e0d8d0] bg-white p-8 text-center shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0ede8]">
-              <Users className="h-7 w-7 text-[#c0b8b0]" />
+          <div className="rounded-2xl bg-white p-10 text-center shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f2ee]">
+              <Users className="h-8 w-8 text-[#c0b8b0]" />
             </div>
-            <p className="text-[15px] font-black text-[#1a1a1a]">Usta topilmadi</p>
-            <p className="mt-1 text-sm text-[#8c8c8c]">Filtrni o'zgartirib ko'ring</p>
+            <p className="text-[17px] font-extrabold text-[#1a1a1a]">Usta topilmadi</p>
+            <p className="mt-1 text-sm text-[#8c8c8c]">Filtrni o&apos;zgartirib ko&apos;ring</p>
             <Link
               href="/ustalar"
-              className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#ff6b2b] px-5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20]"
+              className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-[#ff6b2b] px-6 text-sm font-bold text-white shadow-[0_4px_14px_rgba(255,107,43,0.3)] transition hover:bg-[#e85d20]"
             >
               Barcha ustalar
             </Link>
@@ -210,81 +203,78 @@ export default async function MastersPage({ searchParams }: { searchParams: Para
         {masters.map((m) => {
           const palette = avatarPalette(m.fullName)
           return (
-            <article key={m.id} className="group rounded-2xl border border-[#e0d8d0] bg-white p-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-all hover:border-[#ff6b2b]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
-              <div className="flex items-start gap-3">
-                {/* Avatar */}
-                <div
-                  className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-2xl text-lg font-black"
-                  style={{ background: palette.bg, color: palette.text }}
-                >
-                  {m.profilePhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.profilePhoto} alt={m.fullName} className="h-[72px] w-[72px] rounded-2xl object-cover" />
-                  ) : (
-                    initials(m.fullName)
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  {/* Name + verified */}
-                  <div className="mb-1 flex items-start justify-between gap-2">
-                    <p className="truncate text-[16px] font-black text-[#1a1a1a]">{m.fullName}</p>
-                    {m.isVerified && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                        <CheckCircle2 className="h-2.5 w-2.5" />
-                        Tasdiqlangan
-                      </span>
+            <Link key={m.id} href={`/usta/${m.id}`} className="block">
+              <article className="rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+                <div className="flex items-start gap-3.5">
+                  {/* Avatar */}
+                  <div
+                    className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl text-lg font-extrabold overflow-hidden"
+                    style={{ background: palette.bg, color: palette.text }}
+                  >
+                    {m.profilePhoto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.profilePhoto} alt={m.fullName} className="h-full w-full object-cover" />
+                    ) : (
+                      initials(m.fullName)
                     )}
                   </div>
 
-                  {/* Rating */}
-                  <div className="mb-1.5 flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" />
-                      <span className="text-[13px] font-black text-[#1a1a1a]">{m.rating.toFixed(1)}</span>
+                  <div className="min-w-0 flex-1">
+                    {/* Name + Badge */}
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-[16px] font-extrabold text-[#1a1a1a]">{m.fullName}</p>
+                      {m.isVerified && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                          ELITE
+                        </span>
+                      )}
                     </div>
-                    <span className="text-[11px] text-[#8c8c8c]">({m.reviewCount} sharh)</span>
-                    {m._count.posts > 0 && (
-                      <span className="text-[11px] text-[#8c8c8c]">· {m._count.posts} ish</span>
-                    )}
-                  </div>
 
-                  {/* Info row */}
-                  <div className="mb-1 flex items-center gap-1 text-[11px] text-[#8c8c8c]">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{m.serviceArea} · {m.categories[0]?.category.nameUz ?? "Usta"}</span>
-                  </div>
+                    {/* Rating */}
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" />
+                      <span className="text-[13px] font-bold text-[#1a1a1a]">{m.rating.toFixed(1)}</span>
+                      <span className="text-[12px] text-[#8c8c8c]">({m.reviewCount} sharh)</span>
+                    </div>
 
-                  {/* Experience + price */}
-                  <div className="flex items-center gap-2 text-[11px]">
-                    <span className="rounded-md bg-[#f0ede8] px-2 py-0.5 font-semibold text-[#6a6460]">
-                      {yearsActive(m.createdAt)}
-                    </span>
-                    <span className="rounded-md bg-[#f0ede8] px-2 py-0.5 font-semibold text-[#6a6460]">
-                      {extractPrice(m.bio)}
-                    </span>
-                  </div>
+                    {/* Location */}
+                    <div className="mt-1.5 flex items-center gap-1 text-[12px] text-[#8c8c8c]">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#b0a8a0]" />
+                      <span className="truncate">{m.serviceArea}</span>
+                    </div>
 
-                  {/* Action buttons */}
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <a
-                      href={`tel:${m.phone}`}
-                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#ff6b2b]/30 bg-orange-50 text-[12px] font-bold text-[#ff6b2b] transition hover:bg-orange-100 active:translate-y-[1px]"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                      Qo'ng'iroq
-                    </a>
-                    <Link
-                      href={`/usta/${m.id}`}
-                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#ff6b2b] text-[12px] font-bold text-white shadow-[0_3px_10px_rgba(255,107,43,0.28)] transition hover:bg-[#e85d20] active:translate-y-[1px]"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      Profil
-                    </Link>
+                    {/* Category badges */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {m.categories.map((c) => (
+                        <span
+                          key={c.id}
+                          className="rounded-full border border-[#e0dbd4] px-2.5 py-0.5 text-[11px] font-medium text-[#6a6460]"
+                        >
+                          {c.category.nameUz}
+                        </span>
+                      ))}
+                      {m.categories.length === 0 && (
+                        <span className="rounded-full border border-[#e0dbd4] px-2.5 py-0.5 text-[11px] font-medium text-[#6a6460]">
+                          {yearsActive(m.createdAt)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
+
+                {/* Action row */}
+                <div className="mt-3 flex items-center gap-2">
+                  <span
+                    className="flex h-10 flex-1 items-center justify-center rounded-full bg-[#ff6b2b] text-[13px] font-bold text-white shadow-[0_4px_12px_rgba(255,107,43,0.25)]"
+                  >
+                    Bog&apos;lanish
+                  </span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e0dbd4] bg-white text-[#8c8c8c]">
+                    <Bookmark className="h-4 w-4" />
+                  </span>
+                </div>
+              </article>
+            </Link>
           )
         })}
       </div>

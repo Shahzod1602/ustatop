@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { serviceRequestSchema } from "@/lib/validations"
-import { getTelegramSessionFromCookies } from "@/lib/telegram-session"
+import { auth } from "@/lib/auth"
 import { checkRateLimit } from "@/lib/rate-limit"
-import { sendTelegramMessage } from "@/lib/telegram-bot"
 
 export async function POST(req: NextRequest) {
   try {
-    const tg = await getTelegramSessionFromCookies()
+    const session = await auth()
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-    const rateKey = `new-request:${tg?.telegramId ?? ip}`
+    const rateKey = `new-request:${session?.user?.id ?? ip}`
     const rl = checkRateLimit(rateKey, 10, 60_000)
     if (!rl.ok) {
       return NextResponse.json({ error: "Juda ko'p so'rov. Birozdan keyin urinib ko'ring." }, { status: 429 })
@@ -27,12 +26,8 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data
 
-    const profile = tg?.telegramId
-      ? await prisma.customerProfile.findUnique({ where: { telegramId: tg.telegramId } })
-      : null
-
-    const customerName = data.customerName?.trim() || profile?.fullName || tg?.firstName || "Mijoz"
-    const customerPhone = data.customerPhone?.trim() || profile?.phone
+    const customerName = data.customerName?.trim() || session?.user?.name || "Mijoz"
+    const customerPhone = data.customerPhone?.trim()
     if (!customerPhone) {
       return NextResponse.json({ error: "Telefon raqam topilmadi. Account bo'limida raqamni kiriting." }, { status: 400 })
     }
@@ -48,7 +43,6 @@ export async function POST(req: NextRequest) {
       data: {
         customerName,
         customerPhone,
-        customerTelegramId: tg?.telegramId,
         title: data.title,
         description: data.description,
         categoryId: data.categoryId,
@@ -66,7 +60,7 @@ export async function POST(req: NextRequest) {
         serviceArea: { contains: data.city, mode: "insensitive" },
         categories: { some: { categoryId: data.categoryId } },
       },
-      select: { id: true, telegramId: true },
+      select: { id: true },
     })
 
     // Update request to MATCHED if masters found
@@ -75,25 +69,6 @@ export async function POST(req: NextRequest) {
         where: { id: request.id },
         data: { status: "MATCHED" },
       })
-
-      await Promise.all(
-        matchingMasters
-          .filter((m) => !!m.telegramId)
-          .map((m) =>
-            sendTelegramMessage(
-              m.telegramId as string,
-              `🔔 <b>Yangi so'rov</b>\n\n📌 ${request.title}\n📍 ${request.city}\n📞 ${request.customerPhone}`,
-              {
-                inline_keyboard: [
-                  [
-                    { text: "✅ Qabul qilish", callback_data: `accept_${request.id}` },
-                    { text: "❌ Rad etish", callback_data: `reject_${request.id}` },
-                  ],
-                ],
-              }
-            )
-          )
-      )
     }
 
     return NextResponse.json({

@@ -5,7 +5,6 @@ import Link from "next/link"
 import { ArrowLeft, Loader2, PenLine, UserRoundCog, ShieldCheck, Sparkles } from "lucide-react"
 
 interface Profile {
-  telegramId: string
   fullName: string
   phone?: string
   city?: string
@@ -17,18 +16,6 @@ interface PostItem {
   title: string
   content: string
   createdAt: string
-}
-
-async function ensureTelegramSession() {
-  if (typeof window === "undefined") return
-  const initData = window.Telegram?.WebApp?.initData
-  if (!initData) return
-
-  await fetch("/api/telegram/auth", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ initData }),
-  }).catch(() => {})
 }
 
 export default function AccountPage() {
@@ -44,13 +31,7 @@ export default function AccountPage() {
     setLoading(true)
     setMessage("")
     try {
-      await ensureTelegramSession()
-
-      let profileRes = await fetch("/api/profile")
-      if (profileRes.status === 401) {
-        await ensureTelegramSession()
-        profileRes = await fetch("/api/profile")
-      }
+      const profileRes = await fetch("/api/profile")
       const profileJson = await profileRes.json()
       if (!profileRes.ok) throw new Error(profileJson.error ?? "Profilni olishda xatolik")
 

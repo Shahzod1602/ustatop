@@ -86,7 +86,7 @@ export const adminLoginSchema = z.object({
   password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
 })
 
-// ─── Telegram Customer Profile ───────────────────────────────────────────────
+// ─── Customer Profile ────────────────────────────────────────────────────────
 
 export const customerProfileSchema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 ta harf bo'lishi kerak"),

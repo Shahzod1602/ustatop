@@ -75,7 +75,6 @@ model Master {
   isActive     Boolean  @default(true)
   rating       Float    @default(0)
   reviewCount  Int      @default(0)
-  telegramId   String?  @unique @map("telegram_id")
   latitude     Float?
   longitude    Float?
   createdAt    DateTime @default(now())
@@ -99,19 +98,6 @@ model WebCustomer {
   updatedAt DateTime @updatedAt
 
   @@map("web_customers")
-}
-
-model CustomerProfile {
-  id         String   @id @default(cuid())
-  telegramId String   @unique @map("telegram_id")
-  fullName   String
-  phone      String?
-  city       String?  @default("Toshkent")
-  isMaster   Boolean  @default(false) @map("is_master")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("customer_profiles")
 }
 
 model MasterPost {
@@ -169,7 +155,6 @@ model ServiceRequest {
   master   Master?        @relation("MasterAcceptedRequests", fields: [masterId], references: [id], onDelete: SetNull)
   images   RequestImage[]
   reviews  Review[]
-  customerTelegramId String? @map("customer_telegram_id")
 
   @@map("service_requests")
 }

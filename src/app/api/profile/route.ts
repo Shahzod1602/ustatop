@@ -1,39 +1,55 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getTelegramSessionFromCookies } from "@/lib/telegram-session"
+import { auth } from "@/lib/auth"
 import { customerProfileSchema } from "@/lib/validations"
 
 export async function GET() {
   try {
-    const tg = await getTelegramSessionFromCookies()
-    if (!tg?.telegramId) {
-      return NextResponse.json({ error: "Telegram session topilmadi" }, { status: 401 })
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
     }
 
-    const [profile, linkedMaster] = await Promise.all([
-      prisma.customerProfile.findUnique({
-        where: { telegramId: tg.telegramId },
-      }),
-      prisma.master.findFirst({
-        where: { telegramId: tg.telegramId },
+    const role = session.user.role
+
+    if (role === "MASTER") {
+      const master = await prisma.master.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, fullName: true, phone: true, serviceArea: true, bio: true },
+      })
+      return NextResponse.json({
+        profile: {
+          fullName: master?.fullName ?? session.user.name ?? "",
+          phone: master?.phone ?? "",
+          city: master?.serviceArea ?? "Toshkent",
+          isMaster: true,
+        },
+      })
+    }
+
+    if (role === "CUSTOMER") {
+      const customer = await prisma.webCustomer.findUnique({
+        where: { id: session.user.id },
         select: { id: true, fullName: true, phone: true },
-      }),
-    ])
-
-    const resolvedProfile = profile
-      ? {
-          ...profile,
-          isMaster: profile.isMaster || !!linkedMaster,
-        }
-      : {
-          telegramId: tg.telegramId,
-          fullName: linkedMaster?.fullName ?? tg.firstName ?? "",
-          phone: linkedMaster?.phone ?? "",
+      })
+      return NextResponse.json({
+        profile: {
+          fullName: customer?.fullName ?? session.user.name ?? "",
+          phone: customer?.phone ?? "",
           city: "Toshkent",
-          isMaster: !!linkedMaster,
-        }
+          isMaster: false,
+        },
+      })
+    }
 
-    return NextResponse.json({ profile: resolvedProfile })
+    return NextResponse.json({
+      profile: {
+        fullName: session.user.name ?? "",
+        phone: "",
+        city: "Toshkent",
+        isMaster: false,
+      },
+    })
   } catch (err) {
     console.error("[GET /api/profile]", err)
     return NextResponse.json({ error: "Server xatoligi" }, { status: 500 })
@@ -42,15 +58,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const tg = await getTelegramSessionFromCookies()
-    if (!tg?.telegramId) {
-      return NextResponse.json({ error: "Telegram session topilmadi" }, { status: 401 })
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
     }
-
-    const linkedMaster = await prisma.master.findFirst({
-      where: { telegramId: tg.telegramId },
-      select: { id: true },
-    })
 
     const body = await req.json()
     const parsed = customerProfileSchema.safeParse(body)
@@ -65,19 +76,23 @@ export async function POST(req: NextRequest) {
     const phone = parsed.data.phone?.trim() || null
     const city = parsed.data.city?.trim() || "Toshkent"
 
-    const profile = await prisma.customerProfile.upsert({
-      where: { telegramId: tg.telegramId },
-      update: { fullName, phone, city },
-      create: {
-        telegramId: tg.telegramId,
-        fullName,
-        phone,
-        city,
-        isMaster: !!linkedMaster,
-      },
-    })
+    if (session.user.role === "MASTER") {
+      const profile = await prisma.master.update({
+        where: { id: session.user.id },
+        data: { fullName, phone: phone ?? undefined, serviceArea: city },
+      })
+      return NextResponse.json({ success: true, profile })
+    }
 
-    return NextResponse.json({ success: true, profile })
+    if (session.user.role === "CUSTOMER") {
+      const profile = await prisma.webCustomer.update({
+        where: { id: session.user.id },
+        data: { fullName, phone: phone ?? undefined },
+      })
+      return NextResponse.json({ success: true, profile })
+    }
+
+    return NextResponse.json({ error: "Noma'lum rol" }, { status: 400 })
   } catch (err) {
     console.error("[POST /api/profile]", err)
     return NextResponse.json({ error: "Server xatoligi" }, { status: 500 })

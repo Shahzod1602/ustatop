@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
-import { sendTelegramMessage } from "@/lib/telegram-bot"
 
 const validStatuses = ["ACCEPTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const
 
@@ -40,7 +39,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         masterId: true,
         city: true,
         categoryId: true,
-        customerTelegramId: true,
         customerName: true,
         title: true,
       },
@@ -122,29 +120,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         data: updateData,
         include: { master: { select: { fullName: true, phone: true } } },
       })
-    }
-
-    if (updated?.customerTelegramId) {
-      if (status === "ACCEPTED" && updated.master) {
-        await sendTelegramMessage(
-          updated.customerTelegramId,
-          `🎉 <b>Usta topildi!</b>\n\n👤 ${updated.master.fullName}\n📞 ${updated.master.phone}\n📌 ${updated.title}`
-        )
-      }
-
-      if (status === "COMPLETED") {
-        await sendTelegramMessage(
-          updated.customerTelegramId,
-          `✅ <b>Ish yakunlandi</b>\n\n"${updated.title}" bo'yicha ish tugatildi. Iltimos, baho qoldiring.`
-        )
-      }
-
-      if (status === "CANCELLED") {
-        await sendTelegramMessage(
-          updated.customerTelegramId,
-          `❌ <b>So'rov bekor qilindi</b>\n\n"${updated.title}" so'rovi bekor qilindi.`
-        )
-      }
     }
 
     return NextResponse.json({ success: true, request: updated })

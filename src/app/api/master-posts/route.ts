@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getTelegramSessionFromCookies } from "@/lib/telegram-session"
+import { auth } from "@/lib/auth"
 import { masterPostSchema } from "@/lib/validations"
 
 export async function GET(req: NextRequest) {
@@ -8,21 +8,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const masterId = searchParams.get("masterId")
     let resolvedMasterId = masterId
-    const isPublicMasterQuery = !!masterId
 
     if (!resolvedMasterId) {
-      const tg = await getTelegramSessionFromCookies()
-      if (tg?.telegramId) {
-        const me = await prisma.master.findFirst({
-          where: { telegramId: tg.telegramId },
-          select: { id: true },
-        })
-        resolvedMasterId = me?.id ?? null
+      const session = await auth()
+      if (session?.user?.role === "MASTER") {
+        resolvedMasterId = session.user.id
       }
     }
 
     const posts = await prisma.masterPost.findMany({
-      where: resolvedMasterId ? { masterId: resolvedMasterId } : isPublicMasterQuery ? undefined : { masterId: "__none__" },
+      where: resolvedMasterId ? { masterId: resolvedMasterId } : { masterId: "__none__" },
       include: {
         master: {
           select: {
@@ -47,13 +42,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const tg = await getTelegramSessionFromCookies()
-    if (!tg?.telegramId) {
-      return NextResponse.json({ error: "Telegram session topilmadi" }, { status: 401 })
+    const session = await auth()
+    if (!session?.user || session.user.role !== "MASTER") {
+      return NextResponse.json({ error: "Usta sifatida kirish kerak" }, { status: 401 })
     }
 
-    const master = await prisma.master.findFirst({
-      where: { telegramId: tg.telegramId, isActive: true },
+    const master = await prisma.master.findUnique({
+      where: { id: session.user.id, isActive: true },
       select: { id: true },
     })
     if (!master) {

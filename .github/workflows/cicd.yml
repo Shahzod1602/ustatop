@@ -8,7 +8,6 @@ on:
 env:
   REGISTRY: ghcr.io
   WEB_IMAGE_NAME: shahzod1602/ustatop-web
-  BOT_IMAGE_NAME: shahzod1602/ustatop-bot
 
 jobs:
   test:
@@ -37,7 +36,6 @@ jobs:
       packages: write
     outputs:
       web_image: ${{ steps.meta_web.outputs.tags }}
-      bot_image: ${{ steps.meta_bot.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,15 +59,6 @@ jobs:
             type=raw,value=latest
             type=sha
 
-      - name: Bot image metadata
-        id: meta_bot
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.BOT_IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=sha
-
       - name: Build and push web image
         uses: docker/build-push-action@v6
         with:
@@ -78,15 +67,6 @@ jobs:
           push: true
           tags: ${{ steps.meta_web.outputs.tags }}
           labels: ${{ steps.meta_web.outputs.labels }}
-
-      - name: Build and push bot image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./telegram-bot
-          file: ./telegram-bot/Dockerfile
-          push: true
-          tags: ${{ steps.meta_bot.outputs.tags }}
-          labels: ${{ steps.meta_bot.outputs.labels }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -128,8 +108,7 @@ jobs:
             echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             WEB_IMAGE="ghcr.io/${{ env.WEB_IMAGE_NAME }}:latest"
-            BOT_IMAGE="ghcr.io/${{ env.BOT_IMAGE_NAME }}:latest"
 
-            WEB_IMAGE="$WEB_IMAGE" BOT_IMAGE="$BOT_IMAGE" docker compose -f docker-compose.prod.yml --env-file .env pull
-            WEB_IMAGE="$WEB_IMAGE" BOT_IMAGE="$BOT_IMAGE" docker compose -f docker-compose.prod.yml --env-file .env up -d
+            WEB_IMAGE="$WEB_IMAGE" docker compose -f docker-compose.prod.yml --env-file .env pull
+            WEB_IMAGE="$WEB_IMAGE" docker compose -f docker-compose.prod.yml --env-file .env up -d
             docker image prune -f

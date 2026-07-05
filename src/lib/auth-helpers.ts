@@ -1,6 +1,7 @@
 import bcryptjs from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { masterLoginSchema, webCustomerLoginSchema, adminLoginSchema } from "@/lib/validations"
+import { validateInitDataAny, telegramDisplayName } from "@/lib/telegram-initdata"
 
 export type AuthUser = {
   id: string
@@ -64,6 +65,36 @@ export async function validateCustomerCredentials(
   const ok = await bcryptjs.compare(password, customer.password)
   if (!ok) throw new Error("Telefon raqam yoki parol noto'g'ri")
 
+  return {
+    id: customer.id,
+    email: `customer-${customer.id}@ustatanla.local`,
+    name: customer.fullName,
+    isVerified: true,
+    role: "CUSTOMER",
+  }
+}
+
+/**
+ * Telegram Mini App / web-in-Telegram sign-in. Validates initData against the
+ * bot tokens and auto-creates a WebCustomer by telegramId — so opening the app
+ * inside Telegram gives a real account instead of a guest.
+ */
+export async function validateTelegramWebApp(initData: string): Promise<AuthUser | null> {
+  if (!initData) return null
+  const v = validateInitDataAny(initData, [process.env.USTA_BOT_TOKEN, process.env.MIJOZ_BOT_TOKEN])
+  if (!v) return null
+
+  const tgId = String(v.user.id)
+  let customer = await prisma.webCustomer.findUnique({
+    where: { telegramId: tgId },
+    select: { id: true, fullName: true },
+  })
+  if (!customer) {
+    customer = await prisma.webCustomer.create({
+      data: { telegramId: tgId, fullName: telegramDisplayName(v.user) },
+      select: { id: true, fullName: true },
+    })
+  }
   return {
     id: customer.id,
     email: `customer-${customer.id}@ustatanla.local`,

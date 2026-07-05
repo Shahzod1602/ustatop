@@ -7,6 +7,7 @@ import {
   validateMasterCredentials,
   validateCustomerCredentials,
   validateAdminCredentials,
+  validateTelegramWebApp,
 } from "@/lib/auth-helpers"
 
 // ─── Type augmentation ────────────────────────────────────────────────────────
@@ -80,6 +81,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           credentials?.password as string
         )
         return user
+      },
+    }),
+
+    CredentialsProvider({
+      id: "telegram-webapp",
+      name: "Telegram",
+      credentials: {
+        initData: { label: "initData", type: "text" },
+      },
+      async authorize(credentials) {
+        return await validateTelegramWebApp(credentials?.initData as string)
       },
     }),
   ],

@@ -9,8 +9,12 @@ try {
 export const USTA_BOT_TOKEN = process.env.USTA_BOT_TOKEN ?? ""
 export const MIJOZ_BOT_TOKEN = process.env.MIJOZ_BOT_TOKEN ?? ""
 
-// Public HTTPS URL where the Mini App (Next.js /tma) is served.
+// Public HTTPS URL where the Mini App (Next.js /tma) is served — used for masters.
 export const MINIAPP_URL = process.env.MINIAPP_URL ?? "https://ustatanla.uz/tma"
+
+// Customers open the original web catalog design (warm UstaTop pages).
+const BASE = MINIAPP_URL.replace(/\/tma\/?$/, "")
+export const USER_APP_URL = process.env.USER_APP_URL ?? `${BASE}/ustalar`
 
 export const DEFAULT_CITY = "Toshkent"
 

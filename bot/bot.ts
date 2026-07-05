@@ -2,7 +2,18 @@ import { Bot, InlineKeyboard, Keyboard } from "grammy"
 import { prisma } from "./prisma"
 import { ustaState } from "./state"
 import { MINIAPP_URL, CITIES, PRICE_RANGES, DEFAULT_CITY } from "./config"
-import { notifyCustomerOfAccept } from "./notify"
+
+/**
+ * Single UstaTanla bot — serves BOTH sides:
+ *  - Customers: "🔍 Usta qidirish" opens the Mini App feed (account auto-created via initData).
+ *  - Masters:   "🔧 Usta bo'lish" runs onboarding, then they post work photos from the Mini App.
+ */
+
+const menuKb = () =>
+  new InlineKeyboard()
+    .webApp("🔍 Usta qidirish", MINIAPP_URL)
+    .row()
+    .text("🔧 Usta bo'lish", "become:master")
 
 const kabinetKb = () => new InlineKeyboard().webApp("🗂 Kabinet (Mini App)", MINIAPP_URL)
 
@@ -18,7 +29,7 @@ async function categoryKeyboard(selected: string[]): Promise<InlineKeyboard> {
   return kb
 }
 
-export function createUstaBot(token: string): Bot {
+export function createBot(token: string): Bot {
   const bot = new Bot(token)
 
   bot.command("start", async (ctx) => {
@@ -31,41 +42,52 @@ export function createUstaBot(token: string): Bot {
       await ctx.reply(
         `Assalomu alaykum, ${master.fullName}! 👋\n\n` +
           `${master.isVerified ? "✅ Tasdiqlangan usta" : "⏳ Tasdiqlash kutilmoqda"}\n\n` +
-          `🔔 Sizga mos yangi ishlar shu yerga keladi.\n` +
-          `Profil va statistikani Kabinetда ko'ring:`,
+          `Ishlaringiz rasmlarini joylang — mijozlar sizni feed'da ko'radi.`,
         { reply_markup: kabinetKb() }
       )
       return
     }
     ustaState.clear(ctx.from!.id)
     await ctx.reply(
-      "🔧 <b>UstaTanla — Usta kabineti</b>\n\n" +
-        "Mijozlar sizni topishi uchun ro'yxatdan o'ting. Bir necha qadam, ko'p yozish shart emas.\n\n" +
-        "Boshlash uchun raqamingizni ulashing 👇",
-      {
-        parse_mode: "HTML",
-        reply_markup: new Keyboard().requestContact("📱 Raqamni ulashish").resized().oneTime(),
-      }
+      "🛠 <b>UstaTanla</b>\n\n" +
+        "Kerakli ustani toping — santexnik, elektrik, duradgor va boshqalar bir tugma narida.\n" +
+        "Yoki o'zingiz usta bo'lib ro'yxatdan o'ting 👇",
+      { parse_mode: "HTML", reply_markup: menuKb() }
     )
   })
 
-  // Step 1 — contact (phone + name)
-  bot.on("message:contact", async (ctx) => {
-    const existing = await prisma.master.findUnique({
-      where: { telegramId: String(ctx.from!.id) },
+  // ── Become a master → start onboarding ──
+  bot.callbackQuery("become:master", async (ctx) => {
+    const master = await prisma.master.findUnique({
+      where: { telegramId: String(ctx.from.id) },
       select: { id: true },
     })
-    if (existing) return // already registered
-    const contact = ctx.message.contact
-    const fullName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || "Usta"
-    const phone = contact.phone_number.startsWith("+") ? contact.phone_number : `+${contact.phone_number}`
-    ustaState.set(ctx.from!.id, { step: "categories", fullName, phone, categoryIds: [] })
+    await ctx.answerCallbackQuery()
+    if (master) {
+      await ctx.reply("Siz allaqachon usta sifatida ro'yxatdansiz. Kabinetga kiring:", { reply_markup: kabinetKb() })
+      return
+    }
+    ustaState.set(ctx.from.id, { step: "phone", categoryIds: [] })
+    await ctx.reply("🔧 Usta bo'lish uchun raqamingizni ulashing 👇", {
+      reply_markup: new Keyboard().requestContact("📱 Raqamni ulashish").resized().oneTime(),
+    })
+  })
+
+  // ── Step 1: contact (only during onboarding) ──
+  bot.on("message:contact", async (ctx) => {
+    const st = ustaState.get(ctx.from!.id)
+    if (!st || st.step !== "phone") return
+    const c = ctx.message.contact
+    st.fullName = [c.first_name, c.last_name].filter(Boolean).join(" ") || "Usta"
+    st.phone = c.phone_number.startsWith("+") ? c.phone_number : `+${c.phone_number}`
+    st.step = "categories"
+    ustaState.set(ctx.from!.id, st)
     await ctx.reply("✅ Raqam qabul qilindi.\n\nQaysi yo'nalishda ishlaysiz? (bir nechtasini tanlash mumkin)", {
       reply_markup: await categoryKeyboard([]),
     })
   })
 
-  // Step 2 — category multi-select
+  // ── Step 2: categories ──
   bot.callbackQuery(/^cat:toggle:(.+)$/, async (ctx) => {
     const st = ustaState.get(ctx.from.id)
     if (!st || st.step !== "categories") return ctx.answerCallbackQuery()
@@ -92,7 +114,7 @@ export function createUstaBot(token: string): Bot {
     })
   })
 
-  // Step 3 — location
+  // ── Step 3: location ──
   bot.on("message:location", async (ctx) => {
     const st = ustaState.get(ctx.from!.id)
     if (!st || st.step !== "location") return
@@ -108,7 +130,7 @@ export function createUstaBot(token: string): Bot {
     await ctx.reply("🏙 Shahringizni tanlang:", { reply_markup: kb })
   })
 
-  // Step 4 — city
+  // ── Step 4: city ──
   bot.callbackQuery(/^city:(.+)$/, async (ctx) => {
     const st = ustaState.get(ctx.from.id)
     if (!st || st.step !== "city") return ctx.answerCallbackQuery()
@@ -121,7 +143,7 @@ export function createUstaBot(token: string): Bot {
     await ctx.editMessageText(`🏙 ${st.city}\n\n💰 Narx oralig'ingiz:`, { reply_markup: kb })
   })
 
-  // Step 5 — price → create master
+  // ── Step 5: price → create master ──
   bot.callbackQuery(/^price:(.+)$/, async (ctx) => {
     const st = ustaState.get(ctx.from.id)
     if (!st || st.step !== "price") return ctx.answerCallbackQuery()
@@ -145,7 +167,7 @@ export function createUstaBot(token: string): Bot {
         },
       })
     } catch (err) {
-      console.error("[usta create]", err)
+      console.error("[master create]", err)
       await ctx.answerCallbackQuery({ text: "Xatolik yuz berdi", show_alert: true })
       return
     }
@@ -153,55 +175,11 @@ export function createUstaBot(token: string): Bot {
     await ctx.answerCallbackQuery()
     await ctx.editMessageText(
       "🎉 <b>Tabriklaymiz! Ro'yxatdan o'tdingiz.</b>\n\n" +
-        "⏳ Administrator profilingizni tasdiqlagach, \"✅ Tasdiqlangan\" belgisi paydo bo'ladi.\n" +
-        "🔔 Sizga mos yangi ishlar shu yerga keladi.",
+        "⏳ Administrator profilingizni tasdiqlaydi.\n" +
+        "📸 Endi ishlaringiz rasmlarini joylang — mijozlar feed'da ko'radi.",
       { parse_mode: "HTML" }
     )
-    await ctx.reply("Profilingizni to'ldirish uchun Kabinetга kiring:", { reply_markup: kabinetKb() })
-  })
-
-  // Accept / skip a pushed job
-  bot.callbackQuery(/^job:accept:(.+)$/, async (ctx) => {
-    const requestId = ctx.match![1]
-    const master = await prisma.master.findUnique({
-      where: { telegramId: String(ctx.from.id) },
-      select: { id: true, fullName: true, phone: true, rating: true, isActive: true },
-    })
-    if (!master || !master.isActive) {
-      return ctx.answerCallbackQuery({ text: "Akkaunt topilmadi yoki faol emas", show_alert: true })
-    }
-    // Atomic claim — only if still open / unclaimed.
-    const lock = await prisma.serviceRequest.updateMany({
-      where: { id: requestId, status: { in: ["PENDING", "MATCHED"] }, OR: [{ masterId: null }, { masterId: master.id }] },
-      data: { status: "ACCEPTED", masterId: master.id },
-    })
-    if (lock.count === 0) {
-      await ctx.answerCallbackQuery({ text: "Afsus, ish allaqachon boshqa ustaga ketdi", show_alert: true })
-      await ctx.editMessageReplyMarkup({ reply_markup: undefined })
-      return
-    }
-    const req = await prisma.serviceRequest.findUnique({
-      where: { id: requestId },
-      select: { title: true, customerPhone: true },
-    })
-    await ctx.answerCallbackQuery({ text: "Qabul qilindi! ✅" })
-    await ctx.editMessageText(`✅ Siz bu ishni qabul qildingiz:\n\n${req?.title ?? ""}\n\nMijoz bilan bog'laning.`)
-
-    // Notify the customer (Mijoz bot) if we can find their telegram id by phone.
-    if (req?.customerPhone) {
-      const customer = await prisma.webCustomer.findFirst({
-        where: { phone: req.customerPhone, telegramId: { not: null } },
-        select: { telegramId: true },
-      })
-      if (customer?.telegramId) {
-        await notifyCustomerOfAccept(customer.telegramId, master, req.title)
-      }
-    }
-  })
-
-  bot.callbackQuery(/^job:skip:(.+)$/, async (ctx) => {
-    await ctx.answerCallbackQuery({ text: "O'tkazib yuborildi" })
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined })
+    await ctx.reply("Kabinetga kiring va birinchi postni joylang:", { reply_markup: kabinetKb() })
   })
 
   return bot

@@ -8,8 +8,6 @@ import { getUser } from "@/lib/get-user"
  * the cookie-based UploadThing route directly. This endpoint verifies the Bearer
  * token, then uploads the file server-side via UTApi and returns its URL.
  */
-const utapi = new UTApi()
-
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser()
@@ -29,7 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Rasm 8MB dan katta bo'lmasin" }, { status: 413 })
     }
 
-    const res = await utapi.uploadFiles(file)
+    const res = await new UTApi().uploadFiles(file)
     if (res.error || !res.data) {
       return NextResponse.json({ error: "Yuklashda xatolik" }, { status: 500 })
     }

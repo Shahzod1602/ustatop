@@ -5,8 +5,10 @@ node_modules
 npm-debug.log
 *.log
 .env
-telegram-bot/.env
-telegram-bot/.venv
-telegram-bot/.venv312
-telegram-bot/__pycache__
-telegram-bot/**/*.pyc
+.env.*
+mobile
+.venv
+.venv312
+.claude
+tsconfig.tsbuildinfo
+telegram-bot

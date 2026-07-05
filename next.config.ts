@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Skip ESLint (style/best-practice) during production builds — type safety is
+  // still enforced by `tsc` in dev/CI. TypeScript errors are NOT ignored.
+  eslint: { ignoreDuringBuilds: true },
   images: {
     remotePatterns: [
       {

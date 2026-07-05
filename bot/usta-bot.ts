@@ -4,16 +4,10 @@ import { ustaState } from "./state"
 import { MINIAPP_URL, CITIES, PRICE_RANGES, DEFAULT_CITY } from "./config"
 
 /**
- * Single UstaTanla bot — serves BOTH sides:
- *  - Customers: "🔍 Usta qidirish" opens the Mini App feed (account auto-created via initData).
- *  - Masters:   "🔧 Usta bo'lish" runs onboarding, then they post work photos from the Mini App.
+ * Usta (master) bot — onboarding + kabinet. Masters register here
+ * (phone → categories → location → city → price) and then post work photos
+ * from the Mini App. Discovery happens in the mijoz bot / Mini App feed.
  */
-
-const menuKb = () =>
-  new InlineKeyboard()
-    .webApp("🔍 Usta qidirish", MINIAPP_URL)
-    .row()
-    .text("🔧 Usta bo'lish", "become:master")
 
 const kabinetKb = () => new InlineKeyboard().webApp("🗂 Kabinet (Mini App)", MINIAPP_URL)
 
@@ -29,7 +23,7 @@ async function categoryKeyboard(selected: string[]): Promise<InlineKeyboard> {
   return kb
 }
 
-export function createBot(token: string): Bot {
+export function createUstaBot(token: string): Bot {
   const bot = new Bot(token)
 
   bot.command("start", async (ctx) => {
@@ -47,33 +41,15 @@ export function createBot(token: string): Bot {
       )
       return
     }
-    ustaState.clear(ctx.from!.id)
+    ustaState.set(ctx.from!.id, { step: "phone", categoryIds: [] })
     await ctx.reply(
-      "🛠 <b>UstaTanla</b>\n\n" +
-        "Kerakli ustani toping — santexnik, elektrik, duradgor va boshqalar bir tugma narida.\n" +
-        "Yoki o'zingiz usta bo'lib ro'yxatdan o'ting 👇",
-      { parse_mode: "HTML", reply_markup: menuKb() }
+      "🔧 <b>UstaTanla — Usta kabineti</b>\n\n" +
+        "Mijozlar sizni topishi uchun ro'yxatdan o'ting. Boshlash uchun raqamingizni ulashing 👇",
+      { parse_mode: "HTML", reply_markup: new Keyboard().requestContact("📱 Raqamni ulashish").resized().oneTime() }
     )
   })
 
-  // ── Become a master → start onboarding ──
-  bot.callbackQuery("become:master", async (ctx) => {
-    const master = await prisma.master.findUnique({
-      where: { telegramId: String(ctx.from.id) },
-      select: { id: true },
-    })
-    await ctx.answerCallbackQuery()
-    if (master) {
-      await ctx.reply("Siz allaqachon usta sifatida ro'yxatdansiz. Kabinetga kiring:", { reply_markup: kabinetKb() })
-      return
-    }
-    ustaState.set(ctx.from.id, { step: "phone", categoryIds: [] })
-    await ctx.reply("🔧 Usta bo'lish uchun raqamingizni ulashing 👇", {
-      reply_markup: new Keyboard().requestContact("📱 Raqamni ulashish").resized().oneTime(),
-    })
-  })
-
-  // ── Step 1: contact (only during onboarding) ──
+  // Step 1 — contact
   bot.on("message:contact", async (ctx) => {
     const st = ustaState.get(ctx.from!.id)
     if (!st || st.step !== "phone") return
@@ -87,7 +63,7 @@ export function createBot(token: string): Bot {
     })
   })
 
-  // ── Step 2: categories ──
+  // Step 2 — categories
   bot.callbackQuery(/^cat:toggle:(.+)$/, async (ctx) => {
     const st = ustaState.get(ctx.from.id)
     if (!st || st.step !== "categories") return ctx.answerCallbackQuery()
@@ -114,7 +90,7 @@ export function createBot(token: string): Bot {
     })
   })
 
-  // ── Step 3: location ──
+  // Step 3 — location
   bot.on("message:location", async (ctx) => {
     const st = ustaState.get(ctx.from!.id)
     if (!st || st.step !== "location") return
@@ -130,7 +106,7 @@ export function createBot(token: string): Bot {
     await ctx.reply("🏙 Shahringizni tanlang:", { reply_markup: kb })
   })
 
-  // ── Step 4: city ──
+  // Step 4 — city
   bot.callbackQuery(/^city:(.+)$/, async (ctx) => {
     const st = ustaState.get(ctx.from.id)
     if (!st || st.step !== "city") return ctx.answerCallbackQuery()
@@ -143,7 +119,7 @@ export function createBot(token: string): Bot {
     await ctx.editMessageText(`🏙 ${st.city}\n\n💰 Narx oralig'ingiz:`, { reply_markup: kb })
   })
 
-  // ── Step 5: price → create master ──
+  // Step 5 — price → create master
   bot.callbackQuery(/^price:(.+)$/, async (ctx) => {
     const st = ustaState.get(ctx.from.id)
     if (!st || st.step !== "price") return ctx.answerCallbackQuery()

@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Menu className="h-6 w-6 text-gray-700" />
         </button>
         <Link href="/" className="text-xl font-extrabold text-gray-900 tracking-tight">
-          UstaTop
+          UstaTanla
         </Link>
         <Link href="/dashboard/profile">
           <Avatar className="h-10 w-10">

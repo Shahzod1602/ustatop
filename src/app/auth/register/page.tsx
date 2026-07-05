@@ -92,7 +92,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen flex-col items-center" style={{ backgroundColor: "#f0ede8" }}>
       {/* Top section */}
       <div className="w-full max-w-md px-6 pt-10 pb-2 text-center">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">UstaTop</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">UstaTanla</h1>
         <p className="mt-2 text-sm text-gray-500 leading-relaxed">
           Ro&apos;yxatdan o&apos;ting va eng yaxshi<br />xizmatlardan foydalaning.
         </p>

@@ -30,6 +30,8 @@ export async function validateMasterCredentials(
 
   if (!master) throw new Error("Telefon raqam yoki parol noto'g'ri")
   if (!master.isActive) throw new Error("Akkauntingiz bloklangan. Administrator bilan bog'laning")
+  // Telegram-onboarded masters have no password — they must use the bot, not phone+password.
+  if (!master.password) throw new Error("Bu akkaunt Telegram orqali kiradi")
 
   const ok = await bcryptjs.compare(password, master.password)
   if (!ok) throw new Error("Telefon raqam yoki parol noto'g'ri")
@@ -57,13 +59,14 @@ export async function validateCustomerCredentials(
     select: { id: true, fullName: true, password: true },
   })
   if (!customer) throw new Error("Telefon raqam yoki parol noto'g'ri")
+  if (!customer.password) throw new Error("Bu akkaunt Telegram orqali kiradi")
 
   const ok = await bcryptjs.compare(password, customer.password)
   if (!ok) throw new Error("Telefon raqam yoki parol noto'g'ri")
 
   return {
     id: customer.id,
-    email: `customer-${customer.id}@ustatop.local`,
+    email: `customer-${customer.id}@ustatanla.local`,
     name: customer.fullName,
     isVerified: true,
     role: "CUSTOMER",

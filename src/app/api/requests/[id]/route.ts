@@ -131,6 +131,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await getUser()
+    if (!user) return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
+
     const { id } = await params
     const request = await prisma.serviceRequest.findUnique({
       where: { id },
@@ -142,7 +145,37 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       },
     })
     if (!request) return NextResponse.json({ error: "So'rov topilmadi" }, { status: 404 })
-    return NextResponse.json(request)
+
+    // Authorize: admin, the owning customer, the assigned master, or a master
+    // eligible to serve this request (same category + city). Others get 403.
+    let allowed = false
+    let redact = false
+    if (user.role === "ADMIN") {
+      allowed = true
+    } else if (user.role === "CUSTOMER") {
+      const customer = await prisma.webCustomer.findUnique({ where: { id: user.id }, select: { phone: true } })
+      allowed = !!customer && customer.phone === request.customerPhone
+    } else if (user.role === "MASTER") {
+      if (request.masterId === user.id) {
+        allowed = true
+      } else {
+        const master = await prisma.master.findUnique({
+          where: { id: user.id },
+          select: { serviceArea: true, categories: { select: { categoryId: true } } },
+        })
+        const eligible =
+          !!master &&
+          master.categories.some((c) => c.categoryId === request.categoryId) &&
+          master.serviceArea.toLowerCase().includes(request.city.toLowerCase())
+        allowed = eligible
+        redact = eligible // can see the job, but not customer contact until they accept
+      }
+    }
+
+    if (!allowed) return NextResponse.json({ error: "Ruxsat yo'q" }, { status: 403 })
+
+    const payload = redact ? { ...request, customerPhone: "", address: null } : request
+    return NextResponse.json(payload)
   } catch (err) {
     console.error("[GET /api/requests/:id]", err)
     return NextResponse.json({ error: "Server xatoligi" }, { status: 500 })

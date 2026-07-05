@@ -22,8 +22,8 @@ interface Request {
   address?: string;
   createdAt: string;
   category?: {
-    id: string;
-    name: string;
+    nameUz?: string;
+    icon?: string;
   };
 }
 
@@ -113,8 +113,8 @@ export default function MyRequestsScreen() {
 
   const loadRequests = useCallback(async () => {
     try {
-      const data = await api<Request[]>("/api/my-requests");
-      setRequests(data);
+      const data = await api<{ items: Request[] }>("/api/my-requests");
+      setRequests(data.items ?? []);
     } catch (err) {
       console.error("Failed to load requests:", err);
     } finally {
@@ -155,11 +155,11 @@ export default function MyRequestsScreen() {
           <View style={styles.categoryRow}>
             <View style={styles.categoryChip}>
               <Ionicons
-                name={getCategoryIcon(item.category.name)}
+                name={getCategoryIcon(item.category.nameUz ?? "")}
                 size={14}
                 color={COLORS.primary}
               />
-              <Text style={styles.categoryText}>{item.category.name}</Text>
+              <Text style={styles.categoryText}>{item.category.nameUz}</Text>
             </View>
           </View>
         )}

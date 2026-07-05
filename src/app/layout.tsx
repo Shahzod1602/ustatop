@@ -5,13 +5,13 @@ import Script from "next/script"
 import { AuthSessionProvider } from "@/components/shared/session-provider"
 
 export const metadata: Metadata = {
-  title: { default: "UstaTop — Ishonchli usta toping", template: "%s | UstaTop" },
+  title: { default: "UstaTanla — Ishonchli usta toping", template: "%s | UstaTanla" },
   description: "O'zbekistonda uy-joy ta'miri xizmatlari uchun ishonchli ustalar. Santexnik, elektrik, duradgor va boshqa ustalarni toping.",
   keywords: ["usta", "ta'mir", "santexnik", "elektrik", "toshkent", "uzbekistan"],
-  authors: [{ name: "UstaTop" }],
+  authors: [{ name: "UstaTanla" }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   openGraph: {
-    title: "UstaTop — Ishonchli usta toping",
+    title: "UstaTanla — Ishonchli usta toping",
     description: "O'zbekistonda uy-joy ta'miri xizmatlari uchun ishonchli ustalar.",
     type: "website",
     locale: "uz_UZ",

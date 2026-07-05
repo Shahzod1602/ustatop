@@ -11,8 +11,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       select: {
         id: true,
         fullName: true,
-        email: true,
         phone: true,
+        extraPhones: true,
+        telegramUsername: true,
         bio: true,
         profilePhoto: true,
         serviceArea: true,
@@ -23,6 +24,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         longitude: true,
         createdAt: true,
         categories: { include: { category: { select: { id: true, nameUz: true, icon: true } } } },
+        posts: {
+          orderBy: { createdAt: "desc" },
+          take: 30,
+          select: { id: true, title: true, content: true, imageUrl: true, createdAt: true },
+        },
         reviews: {
           orderBy: { createdAt: "desc" },
           take: 10,
@@ -55,15 +61,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Ma'lumotlar noto'g'ri", details: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
 
-    const { fullName, phone, bio, serviceArea, pricing, profilePhoto, latitude, longitude } = parsed.data
+    const { fullName, bio, serviceArea, pricing, profilePhoto, extraPhones, latitude, longitude } = parsed.data
 
     const updated = await prisma.master.update({
       where: { id },
       data: {
         fullName,
-        phone,
+        // Primary `phone` is intentionally NOT updated here — it's locked after onboarding.
         serviceArea,
         bio: [bio, pricing ? `Narxlar: ${pricing}` : ""].filter(Boolean).join("\n") || null,
+        ...(extraPhones ? { extraPhones: extraPhones.map((p) => (p.startsWith("+") ? p : `+${p}`)) } : {}),
         ...(profilePhoto ? { profilePhoto } : {}),
         ...(latitude !== undefined ? { latitude } : {}),
         ...(longitude !== undefined ? { longitude } : {}),

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../lib/constants";
+import { api } from "../lib/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-// TODO: Create /api/masters endpoint on the backend.
-// The web app uses prisma directly in server components,
-// so we need a dedicated API route for the mobile app.
 
 interface Master {
   id: string;
@@ -35,80 +32,33 @@ interface Master {
   categories: { id: string; name: string }[];
 }
 
-const MOCK_MASTERS: Master[] = [
-  {
-    id: "1",
-    fullName: "Akbar Toshmatov",
-    phone: "+998901234567",
-    bio: "15 yillik tajribaga ega professional santexnik. Har qanday murakkablikdagi ishlarni bajaraman.",
-    rating: 4.9,
-    reviewCount: 127,
-    city: "Toshkent",
-    verified: true,
-    categories: [
-      { id: "1", name: "Santexnik" },
-      { id: "2", name: "Suv ta'minoti" },
-    ],
-  },
-  {
-    id: "2",
-    fullName: "Bobur Karimov",
-    phone: "+998901234568",
-    bio: "Elektr montaj ishlari bo'yicha mutaxassis. Xavfsiz va sifatli ish kafolatlanadi.",
-    rating: 4.8,
-    reviewCount: 89,
-    city: "Toshkent",
-    verified: true,
-    categories: [{ id: "3", name: "Elektrchi" }],
-  },
-  {
-    id: "3",
-    fullName: "Sardor Aliyev",
-    phone: "+998901234569",
-    bio: "Konditsioner o'rnatish va ta'mirlash. Barcha brendlar bilan ishlayman.",
-    rating: 4.7,
-    reviewCount: 64,
-    city: "Samarqand",
-    verified: false,
-    categories: [{ id: "4", name: "Konditsioner" }],
-  },
-  {
-    id: "4",
-    fullName: "Jamshid Rahimov",
-    phone: "+998901234570",
-    bio: "Uy ta'mirlash bo'yicha 10 yillik tajriba. Bo'yash, shpaklyovka, laminat.",
-    rating: 4.6,
-    reviewCount: 45,
-    city: "Buxoro",
-    verified: true,
-    categories: [
-      { id: "5", name: "Remont" },
-      { id: "6", name: "Bo'yoqchi" },
-    ],
-  },
-  {
-    id: "5",
-    fullName: "Otabek Yusupov",
-    phone: "+998901234571",
-    bio: "Mebel yasash va ta'mirlash ustasi. Buyurtmachi dizayni bo'yicha ishlayman.",
-    rating: 4.9,
-    reviewCount: 156,
-    city: "Namangan",
-    verified: true,
-    categories: [{ id: "7", name: "Mebelchi" }],
-  },
-  {
-    id: "6",
-    fullName: "Ulugbek Normatov",
-    phone: "+998901234572",
-    bio: "Plitka yotqizish bo'yicha professional. Hammom va oshxona uchun.",
-    rating: 4.5,
-    reviewCount: 38,
-    city: "Toshkent",
-    verified: false,
-    categories: [{ id: "8", name: "Plitkachi" }],
-  },
-];
+type ApiMaster = {
+  id: string;
+  fullName: string;
+  phone?: string | null;
+  bio?: string | null;
+  profilePhoto?: string | null;
+  serviceArea?: string | null;
+  isVerified: boolean;
+  rating: number;
+  reviewCount: number;
+  categories: { category: { id: string; nameUz: string; icon?: string } }[];
+};
+
+function mapMaster(m: ApiMaster): Master {
+  return {
+    id: m.id,
+    fullName: m.fullName,
+    phone: m.phone ?? undefined,
+    bio: m.bio ?? undefined,
+    image: m.profilePhoto ?? undefined,
+    rating: m.rating,
+    reviewCount: m.reviewCount,
+    city: m.serviceArea ?? undefined,
+    verified: m.isVerified,
+    categories: m.categories.map((c) => ({ id: c.category.id, name: c.category.nameUz })),
+  };
+}
 
 const AVATAR_COLORS = [
   "#ff6b2b",
@@ -127,9 +77,27 @@ const FILTER_CHIPS = [
 
 export default function UstalarScreen() {
   const router = useRouter();
-  const [masters] = useState<Master[]>(MOCK_MASTERS);
+  const [masters, setMasters] = useState<Master[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await api<{ masters: ApiMaster[] }>("/api/masters?limit=50");
+        if (alive) setMasters((data.masters ?? []).map(mapMaster));
+      } catch {
+        if (alive) setMasters([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const toggleBookmark = useCallback((id: string) => {
     setBookmarked((prev) => {
@@ -327,8 +295,17 @@ export default function UstalarScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <Text style={styles.resultCount}>
-            {masters.length} ta usta topildi
+            {loading ? "Yuklanmoqda..." : `${masters.length} ta usta topildi`}
           </Text>
+        }
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator style={{ marginTop: 40 }} color={COLORS.primary} />
+          ) : (
+            <Text style={[styles.resultCount, { textAlign: "center", marginTop: 40 }]}>
+              Hozircha usta topilmadi
+            </Text>
+          )
         }
       />
     </SafeAreaView>

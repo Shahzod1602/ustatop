@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
             </div>
           </div>
           <CardTitle className="text-xl">Admin kirish</CardTitle>
-          <CardDescription>UstaTop boshqaruv paneli</CardDescription>
+          <CardDescription>UstaTanla boshqaruv paneli</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

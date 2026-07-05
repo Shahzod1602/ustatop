@@ -84,8 +84,13 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    // Authentication required — this endpoint returns customer PII.
+    const user = await getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Tizimga kirish kerak" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(req.url)
-    const masterId = searchParams.get("masterId")
     const status = searchParams.get("status")
     const allowedStatuses = ["PENDING", "MATCHED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const
 
@@ -97,18 +102,29 @@ export async function GET(req: NextRequest) {
       where.status = status
     }
 
-    // If masterId, return requests in master's city & categories
-    if (masterId) {
+    // Scope by role — never trust a client-supplied masterId.
+    let restrictToMaster: string | null = null
+    if (user.role === "MASTER") {
       const master = await prisma.master.findUnique({
-        where: { id: masterId },
+        where: { id: user.id },
         include: { categories: { select: { categoryId: true } } },
       })
       if (!master) return NextResponse.json({ error: "Usta topilmadi" }, { status: 404 })
-
+      restrictToMaster = master.id
       const categoryIds = master.categories.map((c) => c.categoryId)
-      where.city = { contains: master.serviceArea, mode: "insensitive" }
-      where.categoryId = { in: categoryIds }
+      // A master sees jobs in their city/categories OR jobs already assigned to them.
+      where.OR = [
+        { city: { contains: master.serviceArea, mode: "insensitive" }, categoryId: { in: categoryIds } },
+        { masterId: master.id },
+      ]
+    } else if (user.role === "CUSTOMER") {
+      const customer = await prisma.webCustomer.findUnique({
+        where: { id: user.id },
+        select: { phone: true },
+      })
+      where.customerPhone = customer?.phone ?? "__none__"
     }
+    // ADMIN: no extra scope — sees everything.
 
     const requests = await prisma.serviceRequest.findMany({
       where,
@@ -117,9 +133,21 @@ export async function GET(req: NextRequest) {
         images: { select: { url: true } },
       },
       orderBy: { createdAt: "desc" },
+      take: 100,
     })
 
-    return NextResponse.json(requests)
+    // Redact customer contact until a master is actually assigned to the request.
+    const sanitized =
+      user.role === "ADMIN"
+        ? requests
+        : requests.map((r) => {
+            const isOwnerCustomer = user.role === "CUSTOMER"
+            const isAssignedMaster = restrictToMaster !== null && r.masterId === restrictToMaster
+            if (isOwnerCustomer || isAssignedMaster) return r
+            return { ...r, customerPhone: "", address: null }
+          })
+
+    return NextResponse.json(sanitized)
   } catch (err) {
     console.error("[GET /api/requests]", err)
     return NextResponse.json({ error: "Server xatoligi" }, { status: 500 })

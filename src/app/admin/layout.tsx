@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Wrench className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-extrabold">UstaTop Admin</p>
+              <p className="text-sm font-extrabold">UstaTanla Admin</p>
               <p className="text-xs text-slate-400">Control Center</p>
             </div>
           </div>

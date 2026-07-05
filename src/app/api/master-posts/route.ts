@@ -64,12 +64,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const imageUrl = parsed.data.imageUrl?.trim() || null
+    const content = parsed.data.content?.trim() || ""
+    // An Instagram-style post needs at least a photo or a caption.
+    if (!imageUrl && !content) {
+      return NextResponse.json({ error: "Rasm yoki izoh kiriting" }, { status: 400 })
+    }
+
     const post = await prisma.masterPost.create({
       data: {
         masterId: master.id,
-        title: parsed.data.title.trim(),
-        content: parsed.data.content.trim(),
-        imageUrl: parsed.data.imageUrl?.trim() || null,
+        title: parsed.data.title?.trim() || "",
+        content,
+        imageUrl,
       },
     })
 

@@ -131,9 +131,16 @@ export default function XaritaPage() {
     masterMarkersRef.current.forEach((m) => m.remove())
     masterMarkersRef.current = []
 
+    // Marker HTML is injected via Leaflet innerHTML, so any user-controlled
+    // value (name, category icon) must be HTML-escaped to prevent stored XSS.
+    const escapeHtml = (s: string) =>
+      s.replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+      )
+
     filteredMasters.forEach((master) => {
-      const emoji = master.categories[0]?.category.icon ?? "🔧"
-      const name = master.fullName.split(" ")[0]?.toUpperCase() ?? ""
+      const emoji = escapeHtml(master.categories[0]?.category.icon ?? "🔧")
+      const name = escapeHtml(master.fullName.split(" ")[0]?.toUpperCase() ?? "")
       const icon = L.divIcon({
         className: "",
         html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">

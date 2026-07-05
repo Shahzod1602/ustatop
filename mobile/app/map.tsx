@@ -105,8 +105,28 @@ export default function MapScreen() {
       if (activeCategory) {
         url += `&categoryId=${activeCategory}`;
       }
-      const data = await api<Master[]>(url);
-      setMasters(data);
+      type ApiMaster = {
+        id: string;
+        fullName: string;
+        profilePhoto?: string | null;
+        rating?: number;
+        latitude: number;
+        longitude: number;
+        categories?: { category: { nameUz: string; icon?: string } }[];
+      };
+      const data = await api<{ masters: ApiMaster[] }>(url);
+      const list = Array.isArray(data?.masters) ? data.masters : [];
+      setMasters(
+        list.map((m) => ({
+          id: m.id,
+          name: m.fullName,
+          photo: m.profilePhoto ?? undefined,
+          rating: m.rating,
+          categoryName: m.categories?.[0]?.category.nameUz,
+          lat: m.latitude,
+          lng: m.longitude,
+        }))
+      );
     } catch {
       // silent
     }

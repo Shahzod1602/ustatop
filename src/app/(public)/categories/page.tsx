@@ -29,7 +29,7 @@ export default async function CategoriesPage() {
       <header className="bg-white px-4 pt-safe pb-4">
         <div className="flex items-center justify-between">
           <span className="text-xl font-extrabold text-[#ff6b2b] tracking-tight">
-            UstaTop
+            UstaTanla
           </span>
           <div className="flex items-center gap-3">
             <button className="rounded-full p-2 text-[#3a3a3a] hover:bg-[#f5f3f0] transition">

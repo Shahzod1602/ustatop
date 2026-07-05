@@ -97,7 +97,7 @@ export default function KabinetPage() {
         <div className="mb-3 rounded-2xl bg-white px-4 py-4 shadow-sm">
           <div className="mb-3 flex items-start gap-3">
             <button className="mt-0.5 text-gray-400 hover:text-gray-600 transition-colors" onClick={() => {
-              if (navigator.share) navigator.share({ title: "UstaTop", url: window.location.href })
+              if (navigator.share) navigator.share({ title: "UstaTanla", url: window.location.href })
             }}>
               <Share2 className="h-5 w-5" />
             </button>

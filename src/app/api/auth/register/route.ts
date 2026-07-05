@@ -6,9 +6,11 @@ import { masterRegisterSchema, webCustomerRegisterSchema } from "@/lib/validatio
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    // Accept role case-insensitively so web ("customer") and mobile ("CUSTOMER") agree.
+    const role = String(body.role ?? "").toLowerCase()
 
     // ── Customer registration ─────────────────────────────────
-    if (body.role === "customer") {
+    if (role === "customer") {
       const parsed = webCustomerRegisterSchema.safeParse(body)
       if (!parsed.success) {
         return NextResponse.json({ error: "Ma'lumotlar noto'g'ri", details: parsed.error.flatten().fieldErrors }, { status: 400 })
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bu telefon raqam allaqachon ro'yxatdan o'tgan" }, { status: 409 })
     }
 
-    const syntheticEmail = `ph-${normalizedPhone.replace(/\D/g, "")}@ustatop.local`
+    const syntheticEmail = `ph-${normalizedPhone.replace(/\D/g, "")}@ustatanla.local`
     const hashedPassword = await bcryptjs.hash(password, 10)
 
     // Create master with categories

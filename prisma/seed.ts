@@ -286,20 +286,25 @@ async function main() {
   // ─────────────────────────────────────────────
   console.log("🔐 Seeding admin user...");
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@ustatop.uz";
-  const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@ustatanla.uz";
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword.length < 8) {
+    throw new Error(
+      "ADMIN_PASSWORD env o'rnatilishi shart (kamida 8 belgi). Default parol bilan admin yaratilmaydi."
+    );
+  }
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 12);
 
   await prisma.adminUser.upsert({
     where: { email: adminEmail },
     update: {
-      name: "UstaTop Admin",
+      name: "UstaTanla Admin",
       password: hashedAdminPassword,
     },
     create: {
       email: adminEmail,
       password: hashedAdminPassword,
-      name: "UstaTop Admin",
+      name: "UstaTanla Admin",
     },
   });
   console.log(`  ✓ Admin: ${adminEmail}`);

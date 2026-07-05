@@ -1,4 +1,4 @@
-# UstaTop CI/CD (GitHub + Docker Server)
+# UstaTanla CI/CD (GitHub + Docker Server)
 
 ## 1) GitHub repository secrets
 `Settings -> Secrets and variables -> Actions` ga quyidagilarni kiriting:

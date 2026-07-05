@@ -80,16 +80,25 @@ export async function POST(req: NextRequest) {
       const profile = await prisma.master.update({
         where: { id: user.id },
         data: { fullName, phone: phone ?? undefined, serviceArea: city },
+        // Never return the password hash / internal columns to the client.
+        select: { id: true, fullName: true, phone: true, serviceArea: true },
       })
-      return NextResponse.json({ success: true, profile })
+      return NextResponse.json({
+        success: true,
+        profile: { fullName: profile.fullName, phone: profile.phone, city: profile.serviceArea, isMaster: true },
+      })
     }
 
     if (user.role === "CUSTOMER") {
       const profile = await prisma.webCustomer.update({
         where: { id: user.id },
         data: { fullName, phone: phone ?? undefined },
+        select: { id: true, fullName: true, phone: true },
       })
-      return NextResponse.json({ success: true, profile })
+      return NextResponse.json({
+        success: true,
+        profile: { fullName: profile.fullName, phone: profile.phone, city, isMaster: false },
+      })
     }
 
     return NextResponse.json({ error: "Noma'lum rol" }, { status: 400 })

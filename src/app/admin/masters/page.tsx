@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,12 @@ export const dynamic = "force-dynamic"
 
 async function toggleVerification(masterId: string, verify: boolean) {
   "use server"
+  // Server Actions are public POST endpoints — authorize inside the action itself,
+  // never rely solely on middleware/layout (which is bypassable, e.g. CVE-2025-29927).
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") {
+    throw new Error("Ruxsat yo'q")
+  }
   await prisma.master.update({ where: { id: masterId }, data: { isVerified: verify } })
   revalidatePath("/admin/masters")
 }

@@ -74,7 +74,7 @@ export default async function HomePage() {
             </div>
             <div>
               <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-white/40">Uy xizmati</p>
-              <p className="text-[21px] font-black leading-none tracking-tight text-white">UstaTop</p>
+              <p className="text-[21px] font-black leading-none tracking-tight text-white">UstaTanla</p>
             </div>
           </div>
           <Link

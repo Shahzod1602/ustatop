@@ -64,17 +64,55 @@ export default function DashboardScreen() {
   const [activeTab, setActiveTab] = useState<BottomTab>("requests");
 
   useEffect(() => {
+    if (!user?.id) return;
     fetchData();
-  }, []);
+  }, [user?.id]);
 
   async function fetchData() {
     try {
-      const data = await api<{
-        stats: DashboardStats;
-        requests: RequestItem[];
-      }>(`/api/requests?masterId=${user?.id}`);
-      if (data.stats) setStats(data.stats);
-      if (data.requests) setRequests(data.requests);
+      type ApiRequest = {
+        id: string;
+        title: string;
+        description: string;
+        status: string;
+        city?: string;
+        address?: string | null;
+        customerName: string;
+        masterId?: string | null;
+        createdAt: string;
+        category?: { nameUz?: string; icon?: string };
+      };
+
+      const [reqData, profile] = await Promise.all([
+        api<ApiRequest[]>(`/api/requests`),
+        api<{ rating?: number; reviewCount?: number }>(`/api/masters/${user?.id}`).catch(() => null),
+      ]);
+
+      const list = Array.isArray(reqData) ? reqData : [];
+
+      // Actionable incoming jobs (accept/reject act on these)
+      const incoming = list.filter((r) => r.status === "PENDING" || r.status === "MATCHED");
+      setRequests(
+        incoming.map((r) => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          categoryName: r.category?.nameUz,
+          customerName: r.customerName,
+          location: r.city ?? r.address ?? undefined,
+          createdAt: r.createdAt,
+          status: r.status,
+        }))
+      );
+
+      // Stats computed only from jobs assigned to this master
+      const mine = list.filter((r) => r.masterId === user?.id);
+      setStats({
+        activeJobs: mine.filter((r) => r.status === "ACCEPTED" || r.status === "IN_PROGRESS").length,
+        completedJobs: mine.filter((r) => r.status === "COMPLETED").length,
+        averageRating: profile?.rating ?? 0,
+        totalEarnings: 0,
+      });
     } catch {
       // silent
     } finally {

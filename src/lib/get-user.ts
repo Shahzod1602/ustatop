@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { verifyMobileToken } from "@/lib/mobile-jwt"
+import { prisma } from "@/lib/prisma"
 
 export interface AppUser {
   id: string
@@ -32,10 +33,30 @@ export async function getUser(): Promise<AppUser | null> {
   const payload = await verifyMobileToken(token)
   if (!payload) return null
 
-  return {
-    id: payload.sub,
-    name: payload.name,
-    role: payload.role,
-    isVerified: payload.isVerified,
+  // Re-check against the DB on every request so blocked/deleted users lose access
+  // immediately instead of the token staying valid for its full 7-day lifetime.
+  if (payload.role === "MASTER") {
+    const master = await prisma.master.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, fullName: true, isActive: true, isVerified: true },
+    })
+    if (!master || !master.isActive) return null
+    return { id: master.id, name: master.fullName, role: "MASTER", isVerified: master.isVerified }
   }
+
+  if (payload.role === "CUSTOMER") {
+    const customer = await prisma.webCustomer.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, fullName: true },
+    })
+    if (!customer) return null
+    return { id: customer.id, name: customer.fullName, role: "CUSTOMER", isVerified: true }
+  }
+
+  const admin = await prisma.adminUser.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, name: true },
+  })
+  if (!admin) return null
+  return { id: admin.id, name: admin.name, role: "ADMIN", isVerified: true }
 }

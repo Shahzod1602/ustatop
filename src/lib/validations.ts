@@ -56,7 +56,9 @@ export type ReviewInput = z.infer<typeof reviewSchema>
 
 export const masterProfileSchema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 ta harfdan iborat bo'lishi kerak"),
-  phone: z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri"),
+  // Primary phone is locked after onboarding; it may be sent but is ignored server-side.
+  phone: z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri").optional(),
+  extraPhones: z.array(z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri")).max(5).optional(),
   bio: z.string().max(500).optional(),
   serviceArea: z.string().min(2, "Xizmat hududini kiriting"),
   pricing: z.string().max(200).optional(),
@@ -100,9 +102,10 @@ export const customerProfileSchema = z.object({
 
 export type CustomerProfileInput = z.infer<typeof customerProfileSchema>
 
+// Instagram-style work post: photo is the point, caption/title optional.
 export const masterPostSchema = z.object({
-  title: z.string().min(3, "Sarlavha kamida 3 ta belgi bo'lsin"),
-  content: z.string().min(20, "Post matni kamida 20 ta belgi bo'lsin"),
+  title: z.string().max(120).optional(),
+  content: z.string().max(1000, "Izoh 1000 belgidan oshmasligi kerak").optional(),
   imageUrl: z.string().url("To'g'ri URL kiriting").optional().or(z.literal("")),
 })
 

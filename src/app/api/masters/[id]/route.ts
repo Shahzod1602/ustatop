@@ -61,7 +61,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Ma'lumotlar noto'g'ri", details: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
 
-    const { fullName, bio, serviceArea, pricing, profilePhoto, extraPhones, latitude, longitude } = parsed.data
+    const { fullName, bio, serviceArea, pricing, profilePhoto, extraPhones, categoryIds, latitude, longitude } = parsed.data
+
+    // Replace category links if provided (validate the ids exist first).
+    if (categoryIds && categoryIds.length > 0) {
+      const valid = await prisma.category.findMany({ where: { id: { in: categoryIds } }, select: { id: true } })
+      const validIds = valid.map((c) => c.id)
+      if (validIds.length > 0) {
+        await prisma.masterCategory.deleteMany({ where: { masterId: id } })
+        await prisma.masterCategory.createMany({ data: validIds.map((categoryId) => ({ masterId: id, categoryId })) })
+      }
+    }
 
     const updated = await prisma.master.update({
       where: { id },

@@ -13,21 +13,29 @@ async function main() {
     process.exit(1)
   }
 
+  const bots: import("grammy").Bot[] = []
   const running: Promise<void>[] = []
 
   if (MIJOZ) {
     const bot = createMijozBot(MIJOZ)
-    running.push(bot.start({ onStart: (i) => console.log(`✅ Mijoz bot: @${i.username}`) }))
+    bots.push(bot)
+    running.push(bot.start({ drop_pending_updates: true, onStart: (i) => console.log(`✅ Mijoz bot: @${i.username}`) }))
   } else {
     console.warn("⚠️  MIJOZ_BOT_TOKEN yo'q — mijoz bot o'tkazib yuborildi")
   }
 
   if (USTA) {
     const bot = createUstaBot(USTA)
-    running.push(bot.start({ onStart: (i) => console.log(`✅ Usta bot: @${i.username}`) }))
+    bots.push(bot)
+    running.push(bot.start({ drop_pending_updates: true, onStart: (i) => console.log(`✅ Usta bot: @${i.username}`) }))
   } else {
     console.warn("⚠️  USTA_BOT_TOKEN yo'q — usta bot o'tkazib yuborildi")
   }
+
+  // Graceful shutdown so a redeploy doesn't leave a stuck getUpdates loop.
+  const stop = () => { console.log("⏹  Botlar to'xtatilmoqda..."); bots.forEach((b) => b.stop()) }
+  process.once("SIGINT", stop)
+  process.once("SIGTERM", stop)
 
   console.log("🤖 UstaTanla botlar long-polling rejimida...")
   await Promise.all(running)

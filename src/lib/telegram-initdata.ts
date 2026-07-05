@@ -29,7 +29,7 @@ export interface ValidatedInitData {
 export function validateInitData(
   initData: string,
   botToken: string,
-  maxAgeSeconds = 86_400
+  maxAgeSeconds = 3_600
 ): ValidatedInitData | null {
   if (!initData || !botToken) return null
 
@@ -82,7 +82,7 @@ export function validateInitData(
 export function validateInitDataAny(
   initData: string,
   tokens: (string | undefined)[],
-  maxAgeSeconds = 86_400
+  maxAgeSeconds = 3_600
 ): ValidatedInitData | null {
   for (const t of tokens) {
     if (!t) continue

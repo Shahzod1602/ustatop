@@ -26,6 +26,9 @@ async function categoryKeyboard(selected: string[]): Promise<InlineKeyboard> {
 export function createUstaBot(token: string): Bot {
   const bot = new Bot(token)
 
+  // Never let a single handler error crash the process (both bots share it).
+  bot.catch((err) => console.error("[usta-bot] handler error:", err.error))
+
   bot.command("start", async (ctx) => {
     const tgId = String(ctx.from!.id)
     const master = await prisma.master.findUnique({

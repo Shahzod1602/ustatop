@@ -89,6 +89,31 @@ export default function KabinetPage() {
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
   const isLoggedIn = !!session?.user
 
+  // Customers get a clean profile — the rest of this page is the master kabinet.
+  if (!loading && session?.user?.role === "CUSTOMER") {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: "#f5f5f5", fontFamily: "Manrope, sans-serif" }}>
+        <div className="px-4 pb-6 pt-6">
+          <div className="rounded-2xl bg-white px-5 py-6 text-center shadow-sm">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100">
+              <span className="text-xl font-extrabold text-[#ff6b2b]">{initials}</span>
+            </div>
+            <h2 className="text-[18px] font-extrabold text-gray-900">{displayName}</h2>
+            <span className="mt-1 inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">Mijoz</span>
+          </div>
+          <div className="mt-3 space-y-2">
+            <a href="/ustalar" className="block rounded-2xl bg-[#ff6b2b] px-4 py-3.5 text-center font-bold text-white shadow-[0_4px_14px_rgba(255,107,43,0.3)]">
+              🔍 Ustalarni ko&apos;rish
+            </a>
+            <a href="/my-requests" className="block rounded-2xl bg-white px-4 py-3.5 text-center font-semibold text-gray-700 shadow-sm">
+              📋 Mening so&apos;rovlarim
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f5f5f5", fontFamily: "Manrope, sans-serif" }}>
       <div className="px-3 pb-6 pt-4">

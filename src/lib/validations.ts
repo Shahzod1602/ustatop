@@ -59,6 +59,7 @@ export const masterProfileSchema = z.object({
   // Primary phone is locked after onboarding; it may be sent but is ignored server-side.
   phone: z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri").optional(),
   extraPhones: z.array(z.string().regex(/^\+?998\d{9}$/, "Telefon raqam noto'g'ri")).max(5).optional(),
+  categoryIds: z.array(z.string()).max(10).optional(),
   bio: z.string().max(500).optional(),
   serviceArea: z.string().min(2, "Xizmat hududini kiriting"),
   pricing: z.string().max(200).optional(),

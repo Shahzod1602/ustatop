@@ -8,6 +8,8 @@ import { USER_APP_URL } from "./config"
 export function createMijozBot(token: string): Bot {
   const bot = new Bot(token)
 
+  bot.catch((err) => console.error("[mijoz-bot] handler error:", err.error))
+
   bot.command("start", async (ctx) => {
     await ctx.reply(
       "🛠 <b>UstaTanla</b> — kerakli ustani toping!\n\n" +

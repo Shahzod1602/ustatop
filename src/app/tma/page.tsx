@@ -72,9 +72,9 @@ async function apiGet<T>(path: string, token: string): Promise<T> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
-async function apiPost<T>(path: string, token: string, body: unknown): Promise<T> {
+async function apiPost<T>(path: string, token: string, body: unknown, method = "POST"): Promise<T> {
   const res = await fetch(path, {
-    method: "POST",
+    method,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
@@ -301,21 +301,36 @@ function MasterProfileScreen({ token, masterId, onBack }: { token: string; maste
 
 // ─── Master app ──────────────────────────────────────────────────────────────
 function MasterApp({ token, user }: { token: string; user: AuthUser }) {
-  const [screen, setScreen] = useState<"profile" | "newpost">("profile")
+  const [screen, setScreen] = useState<"profile" | "newpost" | "edit">("profile")
   const [reloadKey, setReloadKey] = useState(0)
-  return screen === "profile" ? (
-    <MasterSelf token={token} user={user} reloadKey={reloadKey} onNewPost={() => setScreen("newpost")} />
-  ) : (
-    <NewPostScreen token={token} onDone={() => { setReloadKey((k) => k + 1); setScreen("profile") }} onBack={() => setScreen("profile")} />
+  const back = () => setScreen("profile")
+  const reload = () => { setReloadKey((k) => k + 1); setScreen("profile") }
+  if (screen === "newpost") return <NewPostScreen token={token} onDone={reload} onBack={back} />
+  if (screen === "edit") return <EditProfileScreen token={token} user={user} reloadKey={reloadKey} onDone={reload} onBack={back} />
+  return (
+    <MasterSelf token={token} user={user} reloadKey={reloadKey}
+      onNewPost={() => setScreen("newpost")} onEdit={() => setScreen("edit")}
+      onChanged={() => setReloadKey((k) => k + 1)} />
   )
 }
 
-function MasterSelf({ token, user, reloadKey, onNewPost }: { token: string; user: AuthUser; reloadKey: number; onNewPost: () => void }) {
+function MasterSelf({ token, user, reloadKey, onNewPost, onEdit, onChanged }: {
+  token: string; user: AuthUser; reloadKey: number
+  onNewPost: () => void; onEdit: () => void; onChanged: () => void
+}) {
   const [m, setM] = useState<MasterProfile | null>(null)
   const [loading, setLoading] = useState(true)
   useEffect(() => {
     apiGet<MasterProfile>(`/api/masters/${user.id}`, token).then(setM).catch(() => setM(null)).finally(() => setLoading(false))
   }, [token, user.id, reloadKey])
+
+  async function deletePost(id: string) {
+    haptic("light")
+    try {
+      await fetch(`/api/master-posts/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
+      onChanged()
+    } catch { /* ignore */ }
+  }
 
   if (loading) return <Splash />
   if (!m) return <InfoScreen icon="🔧" title="Profil topilmadi" />
@@ -324,8 +339,14 @@ function MasterSelf({ token, user, reloadKey, onNewPost }: { token: string; user
     <Page bottomPad>
       <Header eyebrow="Usta kabineti" title="Mening ishlarim" />
       <ProfileHeader m={m} self />
+      <div className="px-5 pb-1">
+        <button onClick={() => { haptic("light"); onEdit() }}
+          className="w-full rounded-full border border-[#e8e4de] bg-white py-2.5 text-center text-sm font-semibold text-[#6a6460] active:scale-[0.99]">
+          ✏️ Profilni tahrirlash
+        </button>
+      </div>
       <SectionLabel>Postlarim</SectionLabel>
-      <Gallery posts={m.posts} emptyText="Hali post yo'q — ishlaringiz rasmini joylang." />
+      <Gallery posts={m.posts} emptyText="Hali post yo'q — ishlaringiz rasmini joylang." onDelete={deletePost} />
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[480px] px-5 pb-4 pt-3"
         style={{ background: `linear-gradient(to top, ${BG} 55%, transparent)` }}>
         <button
@@ -336,6 +357,113 @@ function MasterSelf({ token, user, reloadKey, onNewPost }: { token: string; user
         </button>
       </div>
     </Page>
+  )
+}
+
+function EditProfileScreen({ token, user, reloadKey, onDone, onBack }: {
+  token: string; user: AuthUser; reloadKey: number; onDone: () => void; onBack: () => void
+}) {
+  const [m, setM] = useState<MasterProfile | null>(null)
+  const [cats, setCats] = useState<Category[]>([])
+  const [fullName, setFullName] = useState("")
+  const [bio, setBio] = useState("")
+  const [city, setCity] = useState("")
+  const [pricing, setPricing] = useState("")
+  const [photo, setPhoto] = useState<string | null>(null)
+  const [picked, setPicked] = useState<string[]>([])
+  const [extra, setExtra] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState("")
+
+  useEffect(() => {
+    apiGet<Category[]>("/api/categories", token).then((c) => setCats(Array.isArray(c) ? c : [])).catch(() => {})
+    apiGet<MasterProfile>(`/api/masters/${user.id}`, token).then((d) => {
+      setM(d); setFullName(d.fullName); setCity(d.serviceArea); setPhoto(d.profilePhoto)
+      setPicked(d.categories.map((c) => c.category.id)); setExtra(d.extraPhones[0] ?? "")
+      const bioMatch = (d.bio ?? "").split("\nNarxlar:")
+      setBio(bioMatch[0]?.replace(/^Narxlar:.*/, "").trim() ?? "")
+      const priceM = (d.bio ?? "").match(/Narxlar:\s*(.+)/)
+      setPricing(priceM ? priceM[1].trim() : "")
+    }).catch(() => {})
+  }, [token, user.id, reloadKey])
+
+  async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    setUploading(true); setErr("")
+    try {
+      const fd = new FormData(); fd.append("file", file)
+      const res = await fetch("/api/tma/upload", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? "Xatolik")
+      setPhoto(data.url)
+    } catch (e) { setErr(e instanceof Error ? e.message : "Xatolik") } finally { setUploading(false) }
+  }
+
+  async function save() {
+    if (fullName.trim().length < 2) { setErr("Ism kiriting"); return }
+    if (city.trim().length < 2) { setErr("Shaharni kiriting"); return }
+    setSaving(true); setErr("")
+    try {
+      await apiPost(`/api/masters/${user.id}`, token, {
+        fullName: fullName.trim(), serviceArea: city.trim(), bio: bio.trim() || undefined,
+        pricing: pricing.trim() || undefined, profilePhoto: photo ?? undefined,
+        categoryIds: picked, extraPhones: extra.trim() ? [extra.trim()] : [],
+      }, "PATCH")
+      haptic("light"); onDone()
+    } catch (e) { setErr(e instanceof Error ? e.message : "Xatolik") } finally { setSaving(false) }
+  }
+
+  if (!m) return <Splash />
+
+  return (
+    <Page>
+      <TopBar title="Profilni tahrirlash" onBack={onBack} />
+      <div className="space-y-4 px-5 pt-1 pb-8">
+        <div className="flex items-center gap-4">
+          <Avatar name={fullName || "?"} photo={photo} size={64} />
+          <label className="cursor-pointer rounded-full border border-[#e8e4de] bg-white px-4 py-2 text-sm font-semibold text-[#6a6460]">
+            {uploading ? "Yuklanmoqda…" : "📷 Rasm"}
+            <input type="file" accept="image/*" className="hidden" onChange={onPhoto} disabled={uploading} />
+          </label>
+        </div>
+        <Field label="Ism"><input value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} /></Field>
+        <Field label="Shahar"><input value={city} onChange={(e) => setCity(e.target.value)} className={inputCls} /></Field>
+        <Field label="Yo'nalishlar">
+          <div className="flex flex-wrap gap-1.5">
+            {cats.map((c) => {
+              const on = picked.includes(c.id)
+              return (
+                <button key={c.id} type="button"
+                  onClick={() => setPicked((p) => on ? p.filter((x) => x !== c.id) : [...p, c.id])}
+                  className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold ${on ? "border-[#ff6b2b] bg-[#ff6b2b]/10 text-[#ff6b2b]" : "border-[#e0dbd4] bg-white text-[#6a6460]"}`}>
+                  {c.icon} {c.nameUz}
+                </button>
+              )
+            })}
+          </div>
+        </Field>
+        <Field label="Narx (ixtiyoriy)"><input value={pricing} onChange={(e) => setPricing(e.target.value)} placeholder="masalan: 100-300 ming" className={inputCls} /></Field>
+        <Field label="Qo'shimcha raqam (ixtiyoriy)"><input value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="+998..." className={inputCls} /></Field>
+        <Field label="Bio (ixtiyoriy)"><textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className={inputCls} /></Field>
+        {err && <p className="text-sm text-red-500">{err}</p>}
+        <button onClick={save} disabled={saving || uploading}
+          className="block w-full rounded-full bg-[#ff6b2b] py-3.5 text-center font-bold text-white shadow-[0_10px_24px_rgba(255,107,43,0.32)] active:scale-[0.98] disabled:opacity-50">
+          {saving ? "Saqlanmoqda…" : "Saqlash"}
+        </button>
+      </div>
+    </Page>
+  )
+}
+
+const inputCls = "w-full rounded-2xl border border-[#e8e4de] bg-white p-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#b0a8a0] focus:border-[#ff6b2b]"
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.1em] text-[#a89f96]">{label}</label>
+      {children}
+    </div>
   )
 }
 
@@ -433,14 +561,23 @@ function ProfileHeader({ m, self }: { m: MasterProfile; self?: boolean }) {
   )
 }
 
-function Gallery({ posts, emptyText }: { posts: MasterProfile["posts"]; emptyText?: string }) {
+function Gallery({ posts, emptyText, onDelete }: { posts: MasterProfile["posts"]; emptyText?: string; onDelete?: (id: string) => void }) {
   const withImg = posts.filter((p) => p.imageUrl)
   if (withImg.length === 0) return <EmptyState icon="📷" title={emptyText ?? "Post yo'q"} />
   return (
     <div className="grid grid-cols-3 gap-1.5 px-5 pb-8">
       {withImg.map((p) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img key={p.id} src={p.imageUrl!} alt={p.title} loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
+        <div key={p.id} className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={p.imageUrl!} alt={p.title} loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
+          {onDelete && (
+            <button
+              onClick={() => { if (confirm("Postni o'chirasizmi?")) onDelete(p.id) }}
+              className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-[13px] text-white active:scale-90"
+              aria-label="O'chirish"
+            >✕</button>
+          )}
+        </div>
       ))}
     </div>
   )

@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ustatop_postgres_data:/var/lib/postgresql/data
+    networks: [ustatop]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -16,31 +17,38 @@ services:
       retries: 10
 
   web:
-    image: ${WEB_IMAGE}
+    build: .
+    image: ustatanla-app:latest
     container_name: ustatop-web
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+    env_file: [.env]
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:-true}
-      NEXTAUTH_URL: ${NEXTAUTH_URL}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
-      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-    command: sh -c "npx prisma db push --skip-generate && npm run start"
+    command: sh -c "npx prisma db push --skip-generate --accept-data-loss && npm run start"
     ports:
-      - "${APP_PORT:-3000}:3000"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health >/dev/null 2>&1 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
+      - "127.0.0.1:${APP_PORT:-3100}:3000"
+    networks: [ustatop]
+
+  bot:
+    image: ustatanla-app:latest
+    container_name: ustatop-bot
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: [.env]
+    environment:
+      NODE_ENV: production
+    command: sh -c "npm run bot"
+    volumes:
+      - ./bot:/app/bot
+    networks: [ustatop]
+
+networks:
+  ustatop:
 
 volumes:
   ustatop_postgres_data:

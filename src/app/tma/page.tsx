@@ -110,13 +110,14 @@ function contactMaster(m: { telegramUsername: string | null; phone: string | nul
   }
 }
 
-type Phase = "loading" | "ready" | "needTelegram" | "error"
+type Phase = "loading" | "ready" | "needTelegram" | "needMasterReg" | "error"
 
 // ─── Root ────────────────────────────────────────────────────────────────────
 export default function MiniAppPage() {
   const [phase, setPhase] = useState<Phase>("loading")
   const [user, setUser] = useState<AuthUser | null>(null)
   const [token, setToken] = useState<string>("")
+  const [botKind, setBotKind] = useState<"master" | "customer">("customer")
   const [errorMsg, setErrorMsg] = useState("")
 
   useEffect(() => {
@@ -137,9 +138,11 @@ export default function MiniAppPage() {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? "Auth xatoligi")
+        if (data.needsMasterRegistration) { setPhase("needMasterReg"); return }
         localStorage.setItem("tma-token", data.accessToken)
         setToken(data.accessToken)
         setUser(data.user)
+        setBotKind(data.botKind === "master" ? "master" : "customer")
         setPhase("ready")
       } catch (e) {
         setErrorMsg(e instanceof Error ? e.message : "Xatolik")
@@ -168,8 +171,19 @@ export default function MiniAppPage() {
           <p className="mt-1.5 text-sm text-[var(--hint)]">{errorMsg}</p>
         </Centered>
       )}
+      {phase === "needMasterReg" && (
+        <Centered>
+          <div className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent)]/12 text-3xl">🔧</div>
+          <p className="text-lg font-extrabold">Avval ro&apos;yxatdan o&apos;ting</p>
+          <p className="mt-1.5 max-w-[22rem] text-sm text-[var(--hint)]">
+            Usta bo&apos;lish uchun botga qayting va <b>/start</b> → &quot;📱 Raqamni ulashish&quot; bilan ro&apos;yxatdan o&apos;ting.
+          </p>
+        </Centered>
+      )}
       {phase === "ready" &&
-        (user?.role === "MASTER" ? <MasterApp token={token} user={user} /> : <CustomerApp token={token} />)}
+        (botKind === "master" && user?.role === "MASTER"
+          ? <MasterApp token={token} user={user} />
+          : <CustomerApp token={token} />)}
     </>
   )
 }

@@ -11,6 +11,8 @@ interface TgWebApp {
   expand: () => void
   openTelegramLink: (url: string) => void
   openLink: (url: string) => void
+  setBackgroundColor?: (c: string) => void
+  setHeaderColor?: (c: string) => void
   HapticFeedback?: { impactOccurred?: (s: string) => void; selectionChanged?: () => void }
 }
 declare global {
@@ -18,6 +20,9 @@ declare global {
     Telegram?: { WebApp?: TgWebApp }
   }
 }
+
+// ─── Brand palette (committed warm light theme — matches the web app) ─────────
+const BG = "#f0ede8"
 
 const TG_SDK = "https://telegram.org/js/telegram-web-app.js"
 
@@ -41,27 +46,6 @@ function loadTelegramSdk(): Promise<TgWebApp | null> {
     s.onerror = () => resolve(null)
     document.head.appendChild(s)
   })
-}
-
-/** Map Telegram theme -> our CSS variables. Brand accent stays constant. */
-function applyTheme(tg: TgWebApp | null) {
-  const root = document.documentElement
-  const tp = tg?.themeParams ?? {}
-  const dark = (tg?.colorScheme ?? "dark") === "dark"
-  const set = (k: string, v?: string) => v && root.style.setProperty(k, v)
-
-  set("--bg", tp.bg_color || (dark ? "#0e1116" : "#f5f6f8"))
-  set("--text", tp.text_color || (dark ? "#eef1f5" : "#101418"))
-  set("--hint", tp.hint_color || (dark ? "#8b95a3" : "#77818e"))
-  root.style.setProperty("--card", dark ? "rgba(255,255,255,0.055)" : "rgba(17,20,24,0.035)")
-  root.style.setProperty("--card-2", dark ? "rgba(255,255,255,0.09)" : "rgba(17,20,24,0.06)")
-  root.style.setProperty("--border", dark ? "rgba(255,255,255,0.10)" : "rgba(17,20,24,0.09)")
-  root.style.setProperty("--accent", "#ff6b2b")
-  root.style.setProperty("--accent-2", "#ff8f4d")
-  root.style.setProperty("--verified", "#3b9ae1")
-  root.dataset.tg = dark ? "dark" : "light"
-  document.body.style.background = "var(--bg)"
-  document.body.style.color = "var(--text)"
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -123,10 +107,11 @@ export default function MiniAppPage() {
   useEffect(() => {
     ;(async () => {
       const tg = await loadTelegramSdk()
-      applyTheme(tg)
       if (tg) {
         tg.ready()
         tg.expand()
+        tg.setBackgroundColor?.(BG)
+        tg.setHeaderColor?.(BG)
       }
       const initData = tg?.initData ?? ""
       if (!initData) { setPhase("needTelegram"); return }
@@ -156,29 +141,15 @@ export default function MiniAppPage() {
       <MiniAppStyles />
       {phase === "loading" && <Splash />}
       {phase === "needTelegram" && (
-        <Centered>
-          <div className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent)]/12 text-3xl">🛠️</div>
-          <p className="text-lg font-extrabold">Telegram ichida oching</p>
-          <p className="mt-1.5 max-w-[22rem] text-sm text-[var(--hint)]">
-            UstaTanla botini oching va tugmani bosing — sahifa shu yerda ishlaydi.
-          </p>
-        </Centered>
+        <InfoScreen icon="🛠️" title="Telegram ichida oching"
+          hint="UstaTanla botini oching va tugmani bosing — sahifa shu yerda ishlaydi." />
       )}
       {phase === "error" && (
-        <Centered>
-          <div className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-red-500/12 text-3xl">⚠️</div>
-          <p className="text-lg font-extrabold">Kirishда xatolik</p>
-          <p className="mt-1.5 text-sm text-[var(--hint)]">{errorMsg}</p>
-        </Centered>
+        <InfoScreen icon="⚠️" title="Kirishda xatolik" hint={errorMsg} tone="danger" />
       )}
       {phase === "needMasterReg" && (
-        <Centered>
-          <div className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[var(--accent)]/12 text-3xl">🔧</div>
-          <p className="text-lg font-extrabold">Avval ro&apos;yxatdan o&apos;ting</p>
-          <p className="mt-1.5 max-w-[22rem] text-sm text-[var(--hint)]">
-            Usta bo&apos;lish uchun botga qayting va <b>/start</b> → &quot;📱 Raqamni ulashish&quot; bilan ro&apos;yxatdan o&apos;ting.
-          </p>
-        </Centered>
+        <InfoScreen icon="🔧" title="Avval ro'yxatdan o'ting"
+          hint="Usta bo'lish uchun botga qayting va /start → “📱 Raqamni ulashish” bilan ro'yxatdan o'ting." />
       )}
       {phase === "ready" &&
         (botKind === "master" && user?.role === "MASTER"
@@ -221,8 +192,8 @@ function FeedScreen({ token, onOpenMaster }: { token: string; onOpenMaster: (id:
 
   return (
     <Page>
-      <Header />
-      <div className="chips no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3 pt-3">
+      <Header eyebrow="Katalog" title="Ustalar" />
+      <div className="chips no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 pt-3">
         <Chip active={active === null} onClick={() => { haptic("select"); setActive(null) }}>Hammasi</Chip>
         {cats.map((c) => (
           <Chip key={c.id} active={active === c.id} onClick={() => { haptic("select"); setActive(c.id) }}>
@@ -232,17 +203,12 @@ function FeedScreen({ token, onOpenMaster }: { token: string; onOpenMaster: (id:
       </div>
 
       {loading ? (
-        <div className="flex flex-col gap-4 px-3 pt-1">
-          <SkeletonCard /><SkeletonCard />
-        </div>
+        <div className="mt-4 flex flex-col gap-4 px-5"><SkeletonCard /><SkeletonCard /></div>
       ) : posts.length === 0 ? (
-        <EmptyState
-          icon="🧰"
-          title="Hozircha ish e'lonlari yo'q"
-          hint="Ustalar ishlarini joylagach shu yerda paydo bo'ladi. Tez orada to'ladi!"
-        />
+        <EmptyState icon="🧰" title="Hozircha ish e'lonlari yo'q"
+          hint="Ustalar ishlarini joylagach shu yerda paydo bo'ladi. Tez orada to'ladi!" />
       ) : (
-        <div className="flex flex-col gap-4 px-3 pb-6 pt-1">
+        <div className="mt-4 flex flex-col gap-4 px-5 pb-8">
           {posts.map((p, i) => (
             <div key={p.id} className="reveal" style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}>
               <PostCard post={p} onOpenMaster={() => onOpenMaster(p.master.id)} />
@@ -257,19 +223,18 @@ function FeedScreen({ token, onOpenMaster }: { token: string; onOpenMaster: (id:
 function PostCard({ post, onOpenMaster }: { post: FeedPost; onOpenMaster: () => void }) {
   const m = post.master
   return (
-    <article className="overflow-hidden rounded-[20px] border border-[var(--border)] bg-[var(--card)]">
-      <button onClick={onOpenMaster} className="flex w-full items-center gap-3 px-3.5 pb-2.5 pt-3 text-left">
-        <Avatar name={m.fullName} photo={m.profilePhoto} size={42} />
+    <article className="overflow-hidden rounded-3xl bg-white shadow-[0_2px_14px_rgba(60,50,40,0.07)]">
+      <button onClick={onOpenMaster} className="flex w-full items-center gap-3 px-4 pb-2.5 pt-3.5 text-left">
+        <Avatar name={m.fullName} photo={m.profilePhoto} size={44} verified={m.isVerified} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1 text-[15px] font-bold leading-tight">
+          <div className="flex items-center gap-1 text-[15px] font-bold leading-tight text-[#1a1a1a]">
             <span className="truncate">{m.fullName}</span>
-            {m.isVerified && <Verified />}
           </div>
-          <div className="mt-0.5 truncate text-xs text-[var(--hint)]">
+          <div className="mt-0.5 truncate text-xs text-[#8c8c8c]">
             {m.category ? `${m.category.icon} ${m.category.nameUz}` : ""} · {m.serviceArea}
           </div>
         </div>
-        <span className="rounded-full bg-[var(--card-2)] px-2 py-1 text-xs font-semibold">
+        <span className="rounded-full bg-[#f5f2ee] px-2.5 py-1 text-xs font-bold text-[#6a6460]">
           ⭐ {m.rating.toFixed(1)}
         </span>
       </button>
@@ -282,23 +247,22 @@ function PostCard({ post, onOpenMaster }: { post: FeedPost; onOpenMaster: () => 
       )}
 
       {(post.content || post.title) && (
-        <p className="px-4 pt-3 text-[14px] leading-snug">
-          <span className="font-bold">{m.fullName.split(" ")[0]}</span>{" "}
-          <span className="text-[var(--text)]/90">{post.content || post.title}</span>
+        <p className="px-4 pt-3 text-[14px] leading-snug text-[#3a3532]">
+          <span className="font-bold text-[#1a1a1a]">{m.fullName.split(" ")[0]}</span>{" "}
+          {post.content || post.title}
         </p>
       )}
 
-      <div className="flex gap-2 p-3">
+      <div className="flex gap-2 p-3.5">
         <button
           onClick={() => contactMaster(m)}
-          className="flex-1 rounded-2xl bg-[var(--accent)] py-3 text-center text-[14px] font-bold text-white active:scale-[0.98]"
-          style={{ boxShadow: "0 6px 18px -6px var(--accent)" }}
+          className="flex-1 rounded-full bg-[#ff6b2b] py-3 text-center text-[14px] font-bold text-white shadow-[0_6px_16px_rgba(255,107,43,0.28)] transition active:scale-[0.98]"
         >
           ✉️ Yozish
         </button>
         <button
           onClick={() => { haptic("light"); onOpenMaster() }}
-          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] px-5 py-3 text-[14px] font-semibold active:scale-[0.98]"
+          className="rounded-full border border-[#e8e4de] bg-white px-5 py-3 text-[14px] font-semibold text-[#6a6460] transition active:scale-[0.98]"
         >
           Profil
         </button>
@@ -315,17 +279,16 @@ function MasterProfileScreen({ token, masterId, onBack }: { token: string; maste
   }, [token, masterId])
 
   if (loading) return <Splash />
-  if (!m) return <Centered>Usta topilmadi</Centered>
+  if (!m) return <InfoScreen icon="🔍" title="Usta topilmadi" />
 
   return (
     <Page>
       <TopBar title="Usta profili" onBack={onBack} />
       <ProfileHeader m={m} />
-      <div className="px-4 pb-4">
+      <div className="px-5 pb-4">
         <button
           onClick={() => contactMaster(m)}
-          className="block w-full rounded-2xl bg-[var(--accent)] py-3.5 text-center font-bold text-white active:scale-[0.98]"
-          style={{ boxShadow: "0 8px 22px -8px var(--accent)" }}
+          className="block w-full rounded-full bg-[#ff6b2b] py-3.5 text-center font-bold text-white shadow-[0_8px_20px_rgba(255,107,43,0.3)] transition active:scale-[0.98]"
         >
           ✉️ Telegramda yozish
         </button>
@@ -355,20 +318,19 @@ function MasterSelf({ token, user, reloadKey, onNewPost }: { token: string; user
   }, [token, user.id, reloadKey])
 
   if (loading) return <Splash />
-  if (!m) return <Centered>Profil topilmadi</Centered>
+  if (!m) return <InfoScreen icon="🔧" title="Profil topilmadi" />
 
   return (
     <Page bottomPad>
-      <Header title="Mening kabinetim" />
+      <Header eyebrow="Usta kabineti" title="Mening ishlarim" />
       <ProfileHeader m={m} self />
-      <SectionLabel>Mening ishlarim</SectionLabel>
+      <SectionLabel>Postlarim</SectionLabel>
       <Gallery posts={m.posts} emptyText="Hali post yo'q — ishlaringiz rasmini joylang." />
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[480px] px-3 pb-3 pt-2"
-        style={{ background: "linear-gradient(to top, var(--bg) 55%, transparent)" }}>
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[480px] px-5 pb-4 pt-3"
+        style={{ background: `linear-gradient(to top, ${BG} 55%, transparent)` }}>
         <button
           onClick={() => { haptic("light"); onNewPost() }}
-          className="block w-full rounded-2xl bg-[var(--accent)] py-3.5 text-center font-bold text-white active:scale-[0.98]"
-          style={{ boxShadow: "0 10px 26px -8px var(--accent)" }}
+          className="block w-full rounded-full bg-[#ff6b2b] py-3.5 text-center font-bold text-white shadow-[0_10px_24px_rgba(255,107,43,0.32)] transition active:scale-[0.98]"
         >
           ➕ Yangi post
         </button>
@@ -409,15 +371,15 @@ function NewPostScreen({ token, onDone, onBack }: { token: string; onDone: () =>
   return (
     <Page>
       <TopBar title="Yangi post" onBack={onBack} />
-      <div className="px-4 pt-1">
-        <label className="mb-3 flex aspect-square w-full cursor-pointer items-center justify-center overflow-hidden rounded-[20px] border-2 border-dashed border-[var(--border)] bg-[var(--card)] active:scale-[0.99]">
+      <div className="px-5 pt-1">
+        <label className="mb-3 flex aspect-square w-full cursor-pointer items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-[#dcd6cd] bg-white transition active:scale-[0.99]">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="Post" className="h-full w-full object-cover" />
           ) : (
-            <div className="text-center text-[var(--hint)]">
+            <div className="text-center text-[#a89f96]">
               <div className="mb-1 text-4xl">{uploading ? "⏳" : "📷"}</div>
-              <div className="text-sm font-medium">{uploading ? "Yuklanmoqda…" : "Ish rasmini tanlang"}</div>
+              <div className="text-sm font-semibold">{uploading ? "Yuklanmoqda…" : "Ish rasmini tanlang"}</div>
             </div>
           )}
           <input type="file" accept="image/*" className="hidden" onChange={onFile} disabled={uploading} />
@@ -425,13 +387,12 @@ function NewPostScreen({ token, onDone, onBack }: { token: string; onDone: () =>
         <textarea
           value={caption} onChange={(e) => setCaption(e.target.value)}
           placeholder="Ish haqida izoh (ixtiyoriy)…" rows={3}
-          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3.5 text-sm outline-none placeholder:text-[var(--hint)]"
+          className="w-full rounded-2xl border border-[#e8e4de] bg-white p-3.5 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#b0a8a0] focus:border-[#ff6b2b]"
         />
-        {err && <p className="mt-2 text-sm text-red-400">{err}</p>}
+        {err && <p className="mt-2 text-sm text-red-500">{err}</p>}
         <button
           onClick={submit} disabled={saving || uploading}
-          className="mt-3 block w-full rounded-2xl bg-[var(--accent)] py-3.5 text-center font-bold text-white active:scale-[0.98] disabled:opacity-50"
-          style={{ boxShadow: "0 10px 26px -8px var(--accent)" }}
+          className="mt-3 block w-full rounded-full bg-[#ff6b2b] py-3.5 text-center font-bold text-white shadow-[0_10px_24px_rgba(255,107,43,0.32)] transition active:scale-[0.98] disabled:opacity-50"
         >
           {saving ? "Joylanmoqda…" : "Joylash"}
         </button>
@@ -443,76 +404,67 @@ function NewPostScreen({ token, onDone, onBack }: { token: string; onDone: () =>
 // ─── Shared UI ───────────────────────────────────────────────────────────────
 function ProfileHeader({ m, self }: { m: MasterProfile; self?: boolean }) {
   return (
-    <div className="px-4 pb-3 pt-4">
-      <div className="flex items-center gap-4">
-        <Avatar name={m.fullName} photo={m.profilePhoto} size={76} ring />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[19px] font-extrabold leading-tight">
-            <span className="truncate">{m.fullName}</span>
-            {m.isVerified && <Verified size={16} />}
-          </div>
-          <div className="mt-1 flex flex-wrap gap-1.5">
-            {m.categories.map((c) => (
-              <span key={c.category.id} className="rounded-full bg-[var(--card-2)] px-2 py-0.5 text-[11px] font-semibold">
-                {c.category.icon} {c.category.nameUz}
-              </span>
-            ))}
-          </div>
-          <div className="mt-1.5 text-xs text-[var(--hint)]">
-            📍 {m.serviceArea} · ⭐ {m.rating.toFixed(1)} ({m.reviewCount})
+    <div className="px-5 pb-3 pt-4">
+      <div className="rounded-3xl bg-white p-4 shadow-[0_2px_14px_rgba(60,50,40,0.07)]">
+        <div className="flex items-center gap-4">
+          <Avatar name={m.fullName} photo={m.profilePhoto} size={72} verified={m.isVerified} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[19px] font-extrabold leading-tight text-[#1a1a1a]">{m.fullName}</div>
+            {m.isVerified && <div className="text-xs font-semibold text-blue-600">Tasdiqlangan usta</div>}
+            <div className="mt-1.5 text-xs text-[#8c8c8c]">📍 {m.serviceArea} · ⭐ {m.rating.toFixed(1)} ({m.reviewCount})</div>
           </div>
         </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {m.categories.map((c) => (
+            <span key={c.category.id} className="rounded-full bg-[#ff6b2b]/10 px-2.5 py-1 text-[11px] font-semibold text-[#ff6b2b]">
+              {c.category.icon} {c.category.nameUz}
+            </span>
+          ))}
+        </div>
+        {m.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#3a3532]">{m.bio}</p>}
+        {self && (
+          <p className="mt-3 rounded-xl bg-[#f5f2ee] px-3 py-2 text-xs text-[#8c8c8c]">
+            📞 Asosiy raqam (o&apos;zgarmas): <span className="font-semibold text-[#1a1a1a]">{m.phone}</span>
+            {!m.isVerified && <span className="ml-1">· ⏳ Tasdiqlash kutilmoqda</span>}
+          </p>
+        )}
       </div>
-      {m.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[var(--text)]/90">{m.bio}</p>}
-      {self && (
-        <p className="mt-2 rounded-xl bg-[var(--card)] px-3 py-2 text-xs text-[var(--hint)]">
-          📞 Asosiy raqam (o&apos;zgarmas): <span className="font-semibold text-[var(--text)]">{m.phone}</span>
-          {!m.isVerified && <span className="ml-1">· ⏳ Tasdiqlash kutilmoqda</span>}
-        </p>
-      )}
     </div>
   )
 }
 
 function Gallery({ posts, emptyText }: { posts: MasterProfile["posts"]; emptyText?: string }) {
   const withImg = posts.filter((p) => p.imageUrl)
-  if (withImg.length === 0)
-    return <EmptyState icon="📷" title={emptyText ?? "Post yo'q"} />
+  if (withImg.length === 0) return <EmptyState icon="📷" title={emptyText ?? "Post yo'q"} />
   return (
-    <div className="grid grid-cols-3 gap-1 px-1 pb-6">
+    <div className="grid grid-cols-3 gap-1.5 px-5 pb-8">
       {withImg.map((p) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={p.id} src={p.imageUrl!} alt={p.title} loading="lazy" className="aspect-square w-full rounded-[6px] object-cover" />
+        <img key={p.id} src={p.imageUrl!} alt={p.title} loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
       ))}
     </div>
   )
 }
 
-function Avatar({ name, photo, size = 44, ring }: { name: string; photo: string | null; size?: number; ring?: boolean }) {
+function Avatar({ name, photo, size = 44, verified }: { name: string; photo: string | null; size?: number; verified?: boolean }) {
   const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-  const ringCls = ring ? "ring-2 ring-[var(--accent)]/40 ring-offset-2 ring-offset-[var(--bg)]" : ""
-  if (photo)
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={photo} alt={name} style={{ width: size, height: size }} className={`shrink-0 rounded-full object-cover ${ringCls}`} />
   return (
-    <div
-      style={{ width: size, height: size, fontSize: size * 0.36 }}
-      className={`grid shrink-0 place-items-center rounded-full font-extrabold text-white ${ringCls}`}
-    >
-      <span className="grid h-full w-full place-items-center rounded-full"
-        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}>
-        {initials}
-      </span>
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      {photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photo} alt={name} className="h-full w-full rounded-full object-cover" />
+      ) : (
+        <div className="grid h-full w-full place-items-center rounded-full bg-[#ff6b2b]/12 font-extrabold text-[#ff6b2b]"
+          style={{ fontSize: size * 0.36 }}>{initials}</div>
+      )}
+      {verified && (
+        <svg className="absolute -bottom-0.5 -right-0.5" width={size * 0.36} height={size * 0.36} viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="11" fill="#fff" />
+          <path fill="#3b9ae1" d="M12 2l2.3 1.6 2.8-.2.9 2.6 2.4 1.6-.9 2.6.9 2.6-2.4 1.6-.9 2.6-2.8-.2L12 22l-2.3-1.6-2.8.2-.9-2.6L3.6 16.4l.9-2.6-.9-2.6L6 9.6l.9-2.6 2.8.2z" />
+          <path fill="#fff" d="M10.6 14.3l-2-2-1.1 1.1 3.1 3.1 5.6-5.6-1.1-1.1z" />
+        </svg>
+      )}
     </div>
-  )
-}
-
-function Verified({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className="shrink-0" style={{ color: "var(--verified)" }}>
-      <path fill="currentColor" d="M12 1l2.6 1.9 3.2-.3 1 3 2.7 1.8-1 3 1 3-2.7 1.8-1 3-3.2-.3L12 23l-2.6-1.9-3.2.3-1-3L2.5 15.7l1-3-1-3 2.7-1.8 1-3 3.2.3z" />
-      <path fill="var(--bg)" d="M10.6 14.6l-2.2-2.2-1.1 1.1 3.3 3.3 6-6-1.1-1.1z" />
-    </svg>
   )
 }
 
@@ -520,58 +472,74 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95 ${
-        active ? "text-white" : "border border-[var(--border)] bg-[var(--card)] text-[var(--text)]"
+      className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition active:scale-95 ${
+        active
+          ? "border-[#ff6b2b] bg-[#ff6b2b]/10 text-[#ff6b2b]"
+          : "border-[#e0dbd4] bg-white text-[#6a6460]"
       }`}
-      style={active ? { background: "linear-gradient(135deg, var(--accent), var(--accent-2))", boxShadow: "0 6px 16px -8px var(--accent)" } : undefined}
     >
       {children}
     </button>
   )
 }
 
-function Header({ title }: { title?: string }) {
+function Header({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-[var(--border)] px-4 py-3"
-      style={{ background: "color-mix(in srgb, var(--bg) 82%, transparent)", backdropFilter: "blur(12px)" }}>
-      <div className="grid h-7 w-7 place-items-center rounded-lg text-[15px]"
-        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}>
-        <span>🔧</span>
+    <header className="sticky top-0 z-10 px-5 pb-3 pt-4"
+      style={{ background: `color-mix(in srgb, ${BG} 85%, transparent)`, backdropFilter: "blur(10px)" }}>
+      <div className="flex items-center gap-2.5">
+        <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#ff6b2b] text-[15px] shadow-[0_4px_12px_rgba(255,107,43,0.3)]">🔧</div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#ff6b2b]">{eyebrow}</p>
+          <h1 className="text-[19px] font-extrabold leading-none tracking-tight text-[#1a1a1a]">{title}</h1>
+        </div>
       </div>
-      <h1 className="text-[17px] font-extrabold tracking-tight">{title ?? "UstaTanla"}</h1>
     </header>
   )
 }
 
 function TopBar({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-[var(--border)] px-2 py-2.5"
-      style={{ background: "color-mix(in srgb, var(--bg) 82%, transparent)", backdropFilter: "blur(12px)" }}>
-      <button onClick={() => { haptic("light"); onBack() }} className="grid h-9 w-9 place-items-center rounded-full text-xl active:bg-[var(--card)]">‹</button>
-      <h1 className="text-[16px] font-bold">{title}</h1>
+    <header className="sticky top-0 z-10 flex items-center gap-2 px-3 py-3"
+      style={{ background: `color-mix(in srgb, ${BG} 85%, transparent)`, backdropFilter: "blur(10px)" }}>
+      <button onClick={() => { haptic("light"); onBack() }}
+        className="grid h-9 w-9 place-items-center rounded-full bg-white text-xl text-[#1a1a1a] shadow-sm active:scale-95">‹</button>
+      <h1 className="text-[16px] font-bold text-[#1a1a1a]">{title}</h1>
     </header>
   )
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <h2 className="px-4 pb-2 pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--hint)]">{children}</h2>
+  return <h2 className="px-5 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a89f96]">{children}</h2>
 }
 
 function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
   return (
-    <div className="flex flex-col items-center px-8 py-16 text-center">
-      <div className="mb-3 grid h-20 w-20 place-items-center rounded-3xl bg-[var(--card)] text-4xl">{icon}</div>
-      <p className="text-[15px] font-bold">{title}</p>
-      {hint && <p className="mt-1.5 max-w-[20rem] text-sm text-[var(--hint)]">{hint}</p>}
+    <div className="px-5 pt-6">
+      <div className="rounded-3xl bg-white p-10 text-center shadow-[0_2px_14px_rgba(60,50,40,0.06)]">
+        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-[#f5f2ee] text-3xl">{icon}</div>
+        <p className="text-[16px] font-extrabold text-[#1a1a1a]">{title}</p>
+        {hint && <p className="mx-auto mt-1.5 max-w-[20rem] text-sm text-[#8c8c8c]">{hint}</p>}
+      </div>
+    </div>
+  )
+}
+
+function InfoScreen({ icon, title, hint, tone }: { icon: string; title: string; hint?: string; tone?: "danger" }) {
+  return (
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center px-8 text-center">
+      <div className={`mb-3 grid h-20 w-20 place-items-center rounded-3xl text-4xl ${tone === "danger" ? "bg-red-500/10" : "bg-[#ff6b2b]/10"}`}>{icon}</div>
+      <p className="text-lg font-extrabold text-[#1a1a1a]">{title}</p>
+      {hint && <p className="mt-1.5 max-w-[22rem] text-sm text-[#8c8c8c]">{hint}</p>}
     </div>
   )
 }
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[var(--border)] bg-[var(--card)]">
-      <div className="flex items-center gap-3 p-3.5">
-        <div className="shimmer h-10 w-10 rounded-full" />
+    <div className="overflow-hidden rounded-3xl bg-white shadow-[0_2px_14px_rgba(60,50,40,0.06)]">
+      <div className="flex items-center gap-3 p-4">
+        <div className="shimmer h-11 w-11 rounded-full" />
         <div className="flex-1 space-y-2"><div className="shimmer h-3 w-1/2 rounded" /><div className="shimmer h-2.5 w-1/3 rounded" /></div>
       </div>
       <div className="shimmer aspect-square w-full" />
@@ -583,8 +551,7 @@ function Splash() {
   return (
     <div className="grid min-h-[100dvh] place-items-center">
       <div className="flex flex-col items-center gap-3">
-        <div className="grid h-14 w-14 animate-pulse place-items-center rounded-2xl text-2xl"
-          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}>🔧</div>
+        <div className="grid h-14 w-14 animate-pulse place-items-center rounded-2xl bg-[#ff6b2b] text-2xl shadow-[0_8px_20px_rgba(255,107,43,0.3)]">🔧</div>
         <div className="spinner" />
       </div>
     </div>
@@ -595,26 +562,22 @@ function Page({ children, bottomPad }: { children: React.ReactNode; bottomPad?: 
   return <div className={`mx-auto min-h-[100dvh] w-full max-w-[480px] ${bottomPad ? "pb-24" : "pb-4"}`}>{children}</div>
 }
 
-function Centered({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center">{children}</div>
-}
-
 function MiniAppStyles() {
   return (
     <style>{`
-      html, body { overflow-x: hidden; }
-      body { -webkit-font-smoothing: antialiased; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif; }
+      html, body { overflow-x: hidden; background: ${BG}; }
+      body { color: #1a1a1a; -webkit-font-smoothing: antialiased;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif; }
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       .reveal { animation: reveal .42s cubic-bezier(.2,.7,.2,1) both; }
       @keyframes reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-      .shimmer { position: relative; overflow: hidden; background: var(--card-2); }
+      .shimmer { position: relative; overflow: hidden; background: #ece7e0; }
       .shimmer::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
-        background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text) 8%, transparent), transparent);
-        animation: shimmer 1.4s infinite; }
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent); animation: shimmer 1.4s infinite; }
       @keyframes shimmer { 100% { transform: translateX(100%); } }
       .spinner { width: 22px; height: 22px; border-radius: 999px;
-        border: 2.5px solid var(--card-2); border-top-color: var(--accent); animation: spin .7s linear infinite; }
+        border: 2.5px solid #e4ded5; border-top-color: #ff6b2b; animation: spin .7s linear infinite; }
       @keyframes spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .reveal, .shimmer::after, .spinner { animation: none !important; } }
     `}</style>
